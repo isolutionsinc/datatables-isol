@@ -14,7 +14,12 @@
   "author": "jeremy.brown@proofgeist.com",
   "license": "ISC",
   "dependencies": {
-    "fm-webviewer-fetch": "^1.1.0",
+
+ "datatables.net": "^1.11.3",
+    "datatables.net-bs4": "^1.11.3",
+    "datatables.net-fixedcolumns": "^4.0.1",
+    "datatables.net-fixedcolumns-bs4": "^4.0.1",
+        "fm-webviewer-fetch": "^1.1.0",
     "regenerator-runtime": "^0.13.9"
   },
   "devDependencies": {
