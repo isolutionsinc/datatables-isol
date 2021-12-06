@@ -79,7 +79,6 @@ column.mRender = toolTip()
   //   $("#tooltip").hide()
   // })  
   $.fn.dataTable.ext.errMode = "none";
-  $("#example").css("height", $(window).height() - 150);
 };
 
 
