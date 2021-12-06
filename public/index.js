@@ -3,6 +3,7 @@ import "./style.css";
 var table;
 const defaultConfig = {
   paging: true,
+  lengthChange: true,
   searching: true,
   scrollY: $(window).height() - 150,
   height:"100%",
@@ -13,6 +14,7 @@ const defaultConfig = {
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
   var obj = JSON.parse(json); // data from FM is a string
+  console.log(obj);
   var data = obj.data;
   var config = obj.config;
   const globalConfig = config.globals || {};
@@ -27,8 +29,8 @@ const ell = (c) =>{
   }
 }
 
-
-const globals = {...defaultConfig, ...globalConfig};
+console.log("default",defaultConfig);
+const globals = {...defaultConfig,...globalConfig};
 columns.forEach(function(column){
   column.render= column.ellipsis ? ell(column.ellipsis) : undefined;
 });
@@ -47,7 +49,7 @@ globals.data = data;
   //     visible: visible,
   //   };
   // });
-
+console.log(globals);
   // Create the DataTable, after destroying it if already exists
   if (table) table.destroy();
   table = $("#example").DataTable(globals);
