@@ -59,6 +59,7 @@ column.mRender = toolTip()
   });
 
   // Add the click handler to the row, after removing it if already exists
+ if (script) {
   $("#example tbody").off("click");
   $("#example tbody").on("click", "tr", function () {
     var record = table.row(this).data();
@@ -66,16 +67,17 @@ column.mRender = toolTip()
 
     FileMaker.PerformScript(script, json);
   });
-  $('#example tbody').on('mousemove', 'tr', function(e) {
-    var rowData = table.row(this).data()
-    console.log(rowData);
-    // return
-    $("#tooltip").text("Hi").animate({ left: e.pageX, top: e.pageY }, 1)
-    if (!$("#tooltip").is(':visible')) $("#tooltip").show()
-  })
-  $('#example tbody').on('mouseleave', function(e) {
-    $("#tooltip").hide()
-  })  
+}
+  // $('#example tbody').on('mousemove', 'tr', function(e) {
+  //   var rowData = table.row(this).data()
+  //   console.log(rowData);
+  //   // return
+  //   $("#tooltip").text("Hi").animate({ left: e.pageX, top: e.pageY }, 1)
+  //   if (!$("#tooltip").is(':visible')) $("#tooltip").show()
+  // })
+  // $('#example tbody').on('mouseleave', function(e) {
+  //   $("#tooltip").hide()
+  // })  
   $.fn.dataTable.ext.errMode = "none";
   $("#example").css("height", $(window).height() - 150);
 };
