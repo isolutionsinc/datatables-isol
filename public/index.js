@@ -1,16 +1,24 @@
 //Here we're importing items we'll need. You can add other imports here.
 import "./style.css";
 var table;
+const defaultConfig = {
+  paging: true,
+  searching: true,
+  scrollY: $(window).height() - 150,
+  height:"100%",
+  colReorder: true,
+ 
+};
 
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
   var obj = JSON.parse(json); // data from FM is a string
   var data = obj.data;
   var config = obj.config;
+  const globalConfig = config.globals || {};
   var script = config.script
-  console.log(script);
+  console.log(globalConfig);
 var columns = obj.columns;
-console.log(columns);
 
 
 const ell = (c) =>{
@@ -19,18 +27,13 @@ const ell = (c) =>{
   }
 }
 
-const toolTip = (c) =>{
 
-  return function(data,type,row){
-    return '<div class="tooltip">'+data+'</div>';
-  }
-}
+const globals = {...defaultConfig, ...globalConfig};
 columns.forEach(function(column){
-  // column.elipisis = 3
   column.render= column.ellipsis ? ell(column.ellipsis) : undefined;
-column.mRender = toolTip()
 });
-
+globals.columns = columns;
+globals.data = data;
   // create column headers from data
   // var firstRecord = data[0];
   // var columns = Object.keys(firstRecord.fieldData).map(function (key) {
@@ -47,16 +50,7 @@ column.mRender = toolTip()
 
   // Create the DataTable, after destroying it if already exists
   if (table) table.destroy();
-  table = $("#example").DataTable({
-    paging: true,
-    searching: true,
-    scrollY: $(window).height() - 150,
-    height:"100%",
-    colReorder: true,
-    columns: columns,
-    data: data,
-   
-  });
+  table = $("#example").DataTable(globals);
 
   // Add the click handler to the row, after removing it if already exists
  if (script) {
