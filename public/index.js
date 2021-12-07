@@ -37,17 +37,7 @@ const ell = (c) =>{
     return data.length > c ? data.substr(0,c)+'...' : data;
   }
 }
-function isValidHttpUrl(string) {
-  let url;
-  
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;  
-  }
 
-  return url.protocol === "http:" || url.protocol === "https:";
-}
 
 const addImgSrc = (c) =>{ 
     console.log(1)
