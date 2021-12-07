@@ -14,42 +14,58 @@ const defaultConfig = {
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
   var obj = JSON.parse(json); // data from FM is a string
-  console.log(obj);
   var data = obj.data;
   var config = obj.config;
   const globalConfig = config.globals || {};
   var script = config.script
-  console.log(globalConfig);
 var columns = obj.columns;
 
+const template = columns
+  .map((elm) => elm.data)
+  .reduce((acc, curr) => ((acc[curr] = ""), acc), {});
 
+console.log(template)
+
+
+const dataUpdated = data.map((elm) => {
+  return { ...template, ...elm };
+});
+
+console.log("data updated", dataUpdated)
 const ell = (c) =>{
   return function(data,type,row){
     return data.length > c ? data.substr(0,c)+'...' : data;
   }
 }
+function isValidHttpUrl(string) {
+  let url;
+  
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;  
+  }
 
-console.log("default",defaultConfig);
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
+const addImgSrc = (c) =>{ 
+    console.log(1)
+    const img = "<img src='"+c+"' onerror='this.onerror=null' alt=''/>";
+    console.log("IMG",img);
+    return img
+  }
+
 const globals = {...defaultConfig,...globalConfig};
-columns.forEach(function(column){
-  column.render= column.ellipsis ? ell(column.ellipsis) : undefined;
+
+dataUpdated.forEach(function(d){
+
+  d.thumbnail_url = addImgSrc(d.thumbnail_url);
+  d.render= d.ellipsis ? ell(d.ellipsis) : undefined;
 });
 globals.columns = columns;
-globals.data = data;
-  // create column headers from data
-  // var firstRecord = data[0];
-  // var columns = Object.keys(firstRecord.fieldData).map(function (key) {
-  //   console.log("key", key);
-  //   var field = firstRecord[key];
-  //   var visible = true;
-  //   if (key === "Id") visible = false;
-  //   return {
-  //     title: key,
-  //     data: "fieldData." + key,
-  //     visible: visible,
-  //   };
-  // });
-console.log(globals);
+globals.data = dataUpdated;
+
   // Create the DataTable, after destroying it if already exists
   if (table) table.destroy();
   table = $("#example").DataTable(globals);
