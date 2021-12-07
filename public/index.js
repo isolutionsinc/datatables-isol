@@ -11,18 +11,45 @@ const defaultConfig = {
  
 };
 let template;
+
+jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+  "non-empty-string-desc": function (str1, str2) {
+       if(str1 == "" && str2 != "")
+          return 1;
+      if(str2 == "" && str1 != "")
+          return -1;
+      if(str1 == "" && str2 == "")
+          return 0;
+      return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
+  },
+
+  "non-empty-string-asc": function (str1, str2) {
+      if(str1 == "" && str2 != "")
+          return -1;
+      if(str2 == "" && str1 != "")
+          return 1;
+      if(str1 == "" && str2 == "")
+          return 0;
+      return ((str1 < str2) ? 1 : ((str1 > str2) ? 1 : 0));
+  }
+} );
+
+
+
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
+ 
   var obj = JSON.parse(json); // data from FM is a string
-  console.log(obj);
   var data = obj.data;
   var config = obj.config;
   // const clickType = config.clickType || "cell"
   const globalConfig = config.globals || {};
   var script = config.script
+  var sort = config.sortEmptyToBottom || true;
 var columns = obj.columns;
-
+var nameType = $.fn.dataTable.absoluteOrder({value:"",position:"bottom"});
 columns.forEach(elm => {
+  sort ? elm.type=nameType : null;
 elm.columnType ==="img"? 
   elm.render = function (data, type, row, meta) {
     return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive" />`
@@ -46,11 +73,6 @@ const ell = (c) =>{
 }
 
 
-// const addImgSrc = (c) =>{ 
-//     const img = "<img src='"+c+"' onerror='this.onerror=null' alt=''/>";
-//     return img
-//   }
-
 const globals = {...defaultConfig,...globalConfig};
 
 dataUpdated.forEach(function(d){
@@ -61,6 +83,8 @@ globals.data = dataUpdated;
 
   // Create the DataTable, after destroying it if already exists
   if (table) table.destroy();
+
+
   table = $("#example").DataTable(globals);
 
   // Add the click handler to the row, after removing it if already exists
@@ -74,7 +98,6 @@ globals.data = dataUpdated;
 const value = cell.data()
 const col = table.column(this).index();
 const row = table.row(this).index();
-console.log("ROW",dataUpdated[row]);
 const json = {value, column:columns[col],row:dataUpdated[row]}
 console.log(json);
 FileMaker.PerformScript(script, JSON.stringify(json));
