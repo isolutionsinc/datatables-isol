@@ -1,22 +1,61 @@
+@font-face { font-family: 3M Circular; 
+    src: url('3MCircularTT-Regular.ttf') format(tff); 
+  
+  } 
+
 body{
    margin: 0px;
    overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+font-size: 12px;
+font-family: '3M Circular TT';
+  
 }
 
 table{
-  border-bottom: 1px solid #ddd;
+
+color:black;
+font-size: 12px;
 }
 
+ 
+table.dataTable thead tr {
+  font-size: 13px;
+  font-style: normal;
+  background-color: #E4E6E4;
+  color: #595959
+}
 
-#tooltip {
-  position: absolute;
-  z-index: 1001;
-  display: none;
-  border: 2px solid #ebebeb;
-  border-radius: 5px;
-  padding: 10px;
-  background-color: #fff;
+th{
+  font-weight:normal;
+}
+
+.pagination .page-item.active .page-link { 
+  border-color:#691f95;
+  background-color: #8228b4; }
+
+div.dataTables_wrapper div.dataTables_paginate ul.pagination .page-item.active .page-link:focus {
+background-color: #8228b4;
+}
+
+.pagination .page-item.active .page-link:hover {
+  border-color:#691f95;
+  /* border:0px; */
+background-color: #691f95;
+}
+.pagination{
+  
+}
+.page-link {
+  color: black;
+}
+
+table.display tbody tr:nth-child(even):hover td{
+  background-color:#2857E90f !important;
+}
+
+table.display tbody tr:nth-child(odd):hover td {
+  background-color: #2857E90f !important;
 }
 
