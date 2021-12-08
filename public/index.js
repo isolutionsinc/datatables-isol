@@ -45,11 +45,13 @@ window.loadData = function (json) {
   // const clickType = config.clickType || "cell"
   const globalConfig = config.globals || {};
   var script = config.script
-  var sort = config.sortEmptyToBottom || true;
+  var sortConfig = config.sortEmptyToBottom;
+  const sort = sortConfig===false ? sortConfig :true
 var columns = obj.columns;
 var nameType = $.fn.dataTable.absoluteOrder({value:"",position:"bottom"});
 columns.forEach(elm => {
-  sort ? elm.type=nameType : null;
+  console.log(sort);
+  sort ? elm.type=nameType : elm.type = "";
 elm.columnType ==="img"? 
   elm.render = function (data, type, row, meta) {
     return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive" />`
