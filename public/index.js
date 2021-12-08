@@ -43,6 +43,7 @@ window.loadData = function (json) {
   var obj = JSON.parse(json); // data from FM is a string
   var data = obj.data;
   var config = obj.config;
+  var dtFormat = config.dtFormat ?config.dtFormat : "MM/DD/YYYY";
   // const clickType = config.clickType || "cell"
   const globalConfig = config.globals || {};
   var script = config.script
@@ -50,16 +51,23 @@ window.loadData = function (json) {
   const sort = sortConfig===false ? sortConfig :true
 var columns = obj.columns;
 var nameType = $.fn.dataTable.absoluteOrder({value:"",position:"bottom"});
+
 columns.forEach(elm => {
   sort ? elm.type=nameType : elm.type = "";
   elm.columnType === "button" ? elm.render =function (data, type, row, meta) {
     return "<button class='btn btn-primary middle'>Download</button>"
 }:null
 ;
+elm.columnType === "thumbnail" ? elm.render =function (data, type, row, meta) {
+  return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive thumbnail my-pointer" />`
+}:null;
 elm.columnType ==="img"? 
   elm.render = function (data, type, row, meta) {
-    return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive" />`
+    return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="my-pointer img-responsive" />`
 }:null
+
+elm.columnType==="dateTime" ? elm.render = function (data, type, row, meta) {
+  return moment(data).format(dtFormat)}:null
   return elm;
 })
  template = columns

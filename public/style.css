@@ -49,6 +49,7 @@ background-color: #691f95;
 .btn-primary, .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
   background-color: #8228b4 !important;
   border-color: #8228b4 !important;
+  cursor:pointer
 }
 .page-link {
   color: black;
@@ -56,4 +57,12 @@ background-color: #691f95;
 
 table.dataTable tbody td {
   vertical-align: middle;
+}
+
+ .thumbnail {
+  width: 150px;
+  height: auto;
+}
+example tbody tr td.my-pointer {
+  cursor: pointer;
 }
