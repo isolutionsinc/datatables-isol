@@ -4,6 +4,7 @@ var table;
 const defaultConfig = {
   paging: true,
   lengthChange: true,
+  "order": [1,'asc'],
   searching: true,
   scrollY: $(window).height() - 150,
   height:"100%",
@@ -50,8 +51,11 @@ window.loadData = function (json) {
 var columns = obj.columns;
 var nameType = $.fn.dataTable.absoluteOrder({value:"",position:"bottom"});
 columns.forEach(elm => {
-  console.log(sort);
   sort ? elm.type=nameType : elm.type = "";
+  elm.columnType === "button" ? elm.render =function (data, type, row, meta) {
+    return "<button class='btn btn-primary middle'>Download</button>"
+}:null
+;
 elm.columnType ==="img"? 
   elm.render = function (data, type, row, meta) {
     return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive" />`

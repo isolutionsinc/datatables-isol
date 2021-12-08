@@ -12,7 +12,9 @@ font-size: 12px;
 font-family: '3M Circular TT';
   
 }
-
+button.main {
+  background-color: red;
+}
 table{
 
 color:black;
@@ -44,18 +46,14 @@ background-color: #8228b4;
   /* border:0px; */
 background-color: #691f95;
 }
-.pagination{
-  
+.btn-primary, .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
+  background-color: #8228b4 !important;
+  border-color: #8228b4 !important;
 }
 .page-link {
   color: black;
 }
 
-table.display tbody tr:nth-child(even):hover td{
-  background-color:#2857E90f !important;
+table.dataTable tbody td {
+  vertical-align: middle;
 }
-
-table.display tbody tr:nth-child(odd):hover td {
-  background-color: #2857E90f !important;
-}
-
