@@ -35,7 +35,17 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort, {
   }
 } );
 
-
+const expandColumn =   {
+  "className":      'dt-control',
+  "orderable":      false,
+  "columnType":"arrow",
+  "data":           null,
+  "defaultContent": '',
+  "width":"55px",
+  "render": function () {
+    return '<i class="fa fa-caret-right" aria-hidden="true"></i>';
+},
+};
 
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
@@ -43,15 +53,27 @@ window.loadData = function (json) {
   var obj = JSON.parse(json); // data from FM is a string
   var data = obj.data;
   var config = obj.config;
+  const expand = config.expand;
   var dtFormat = config.dtFormat ?config.dtFormat : "MM/DD/YYYY";
-  // const clickType = config.clickType || "cell"
   const globalConfig = config.globals || {};
   var script = config.script
   var sortConfig = config.sortEmptyToBottom;
   const sort = sortConfig===false ? sortConfig :true
 var columns = obj.columns;
 var nameType = $.fn.dataTable.absoluteOrder({value:"",position:"bottom"});
-
+let rows = "";
+function format ( d ) {
+  // `d` is the original data object for the row
+  rows = "";
+const tableStr = `<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px">`;
+const tableEnd = `</table>`;
+expand.forEach((e) => {
+    rows = rows +`<tr><td>${e.title}</td><td>${d[e.data]}</td></tr>` 
+    console.log("Rows", rows)
+  return rows;
+  });
+return tableStr + rows + tableEnd;
+}
 columns.forEach(elm => {
   sort ? elm.type=nameType : elm.type = "";
   elm.columnType === "button" ? elm.render =function (data, type, row, meta) {
@@ -70,6 +92,7 @@ elm.columnType==="dateTime" ? elm.render = function (data, type, row, meta) {
   return moment(data).format(dtFormat)}:null
   return elm;
 })
+columns.unshift(expandColumn);
  template = columns
   .map((elm) => elm.data)
   .reduce((acc, curr) => ((acc[curr] = ""), acc), {});
@@ -104,7 +127,35 @@ globals.data = dataUpdated;
   // Add the click handler to the row, after removing it if already exists
  if (script) {
   $("#example tbody").off("click");
+  $('#example tbody').on('click', 'td.dt-control', function (e) {
+    
+    var tr = $(this).closest('tr');
+    var tdi = tr.find("i.fa");
+    var row = table.row(tr);
 
+    if (row.child.isShown()) {
+        // This row is already open - close it
+        row.child.hide();
+        tr.removeClass('shown');
+        tdi.first().removeClass('fa-caret-down');
+        tdi.first().addClass('fa-caret-right');
+    }
+    else {
+        // Open this row
+        row.child(format(row.data())).show();
+        tr.addClass('shown');
+        tdi.first().removeClass('fa-caret-right');
+        tdi.first().addClass('fa-caret-down');
+    }
+    e.stopPropagation();
+
+});
+
+
+table.on("user-select", function (e, dt, type, cell, originalEvent) {
+    if ($(cell.node()).hasClass("dt-control")) {
+    }
+});
   
   $("#example tbody").on("click", "td", function () {
   var cell = table.cell(this);
@@ -117,6 +168,10 @@ console.log(json);
 FileMaker.PerformScript(script, JSON.stringify(json));
 
  });
+  // Add event listener for opening and closing details
+ 
+$('#example tbody').on('click', 'td.dt-control', function (e) {e.preventDefault();}); 
+
 }
  $.fn.dataTable.ext.errMode = "none";
 }

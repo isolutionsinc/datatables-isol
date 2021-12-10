@@ -40,10 +40,15 @@ th{
 div.dataTables_wrapper div.dataTables_paginate ul.pagination .page-item.active .page-link:focus {
 background-color: #8228b4;
 }
+td.dt-control {
+  text-align:center;
+  font-size:24px;
+  color:black;
+  cursor: pointer;
+}
 
 .pagination .page-item.active .page-link:hover {
   border-color:#691f95;
-  /* border:0px; */
 background-color: #691f95;
 }
 .btn-primary, .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
