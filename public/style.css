@@ -1,60 +1,71 @@
-@font-face { font-family: 3M Circular; 
-    src: url('3MCircularTT-Regular.ttf') format(tff); 
-  
-  } 
+@font-face {
+  font-family: 3m Circular;
+  src: url("3MCircularTT-Regular.ttf") format(tff);
+}
 
-body{
-   margin: 0px;
-   overflow-x: hidden;
+body {
+  margin: 0px;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-font-size: 12px;
-font-family: '3M Circular TT';
-  
+  font-size: 12px;
+  font-family: "3M Circular TT", sans-serif;
 }
 button.main {
   background-color: red;
 }
-table{
-
-color:black;
-font-size: 12px;
+table {
+  color: black;
+  font-size: 12px;
 }
 
- 
 table.dataTable thead tr {
   font-size: 13px;
   font-style: normal;
-  background-color: #E4E6E4;
-  color: #595959
+  background-color: #e4e6e4;
+  color: #595959;
+  border: 1px solid #595959;
+}
+/* .smallTable {
+  background-color: #bbbcbd;
+} */
+.table.table.subTable {
+  border: 1px solid #dee2e6;
+}
+th {
+  font-weight: normal;
 }
 
-th{
-  font-weight:normal;
+.pagination .page-item.active .page-link {
+  border-color: #691f95;
+  background-color: #8228b4;
 }
 
-.pagination .page-item.active .page-link { 
-  border-color:#691f95;
-  background-color: #8228b4; }
-
-div.dataTables_wrapper div.dataTables_paginate ul.pagination .page-item.active .page-link:focus {
-background-color: #8228b4;
+div.dataTables_wrapper
+  div.dataTables_paginate
+  ul.pagination
+  .page-item.active
+  .page-link:focus {
+  background-color: #8228b4;
 }
 td.dt-control {
-  text-align:center;
-  font-size:24px;
-  color:black;
+  text-align: center;
+  font-size: 24px;
+  color: black;
   cursor: pointer;
 }
 
 .pagination .page-item.active .page-link:hover {
-  border-color:#691f95;
-background-color: #691f95;
+  border-color: #691f95;
+  background-color: #691f95;
 }
-.btn-primary, .btn-primary:hover, .btn-primary:active, .btn-primary:visited {
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:visited {
   background-color: #8228b4 !important;
   border-color: #8228b4 !important;
-  cursor:pointer
+  cursor: pointer;
 }
 .page-link {
   color: black;
@@ -64,7 +75,7 @@ table.dataTable tbody td {
   vertical-align: middle;
 }
 
- .thumbnail {
+.thumbnail {
   width: 150px;
   height: auto;
 }
