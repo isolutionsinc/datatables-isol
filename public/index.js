@@ -67,10 +67,17 @@ window.loadData = function (json) {
     const tableStr = `<table class=" table subTable">`;
     const tableEnd = `</table>`;
     expand.forEach((e) => {
+      console.log("E", e);
+      console.log("D", d);
+
+      const tempString = e.templateString || "";
+      const template = Handlebars.compile(tempString);
+      console.log(tempString);
+      const templateRow = template(d);
       rows =
         rows +
         `<tr><td class="expand" width="20%">${e.title}</td><td class="expand">${
-          d[e.data] || ""
+          e.columnType === "template" ? templateRow : d[e.data] || ""
         }</td></tr>`;
       console.log("Rows", rows);
       return rows;
@@ -103,12 +110,8 @@ window.loadData = function (json) {
     elm.columnType === "template"
       ? (elm.render = function (data, type, row, meta) {
           const tempString = elm.templateString;
-          const propertyName = elm.propertyName;
-          const d = { [propertyName]: row[propertyName] };
-          console.log(d);
           const template = Handlebars.compile(tempString);
-          console.log("tempste", tempString);
-          return template(d);
+          return template(row);
         })
       : null;
     return elm;
