@@ -188,7 +188,7 @@ window.loadData = function (json) {
     );
 
     $("#example tbody td").on("click", "expand", function () {
-      alert(d);
+      // alert(d);
       const json = { value, column: columns[col], row: dataUpdated[row] };
       console.log(json);
       FileMaker.PerformScript(script, JSON.stringify(json));
