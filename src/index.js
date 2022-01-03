@@ -1,5 +1,5 @@
 //Here we're importing items we'll need. You can add other imports here.
-import "./style.css";
+// import "./style.css";
 
 const Handlebars = require("handlebars");
 const temp = Handlebars.compile("Name: {{name}}");
