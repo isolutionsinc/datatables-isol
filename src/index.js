@@ -95,12 +95,12 @@ window.loadData = function (json) {
       : null;
     elm.columnType === "thumbnail"
       ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive thumbnail my-pointer" />`;
+          return `<img src="${data}" style="height: 100px" class="img-responsive my-pointer" />`;
         })
       : null;
     elm.columnType === "img"
       ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="my-pointer img-responsive" />`;
+          return `<img src="${data}" class="img-responsive my-pointer" />`;
         })
       : null;
 
