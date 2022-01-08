@@ -1,10 +1,8 @@
-//Here we're importing items we'll need. You can add other imports here.
-// import "./style.css";
-
 const Handlebars = require("handlebars");
 const temp = Handlebars.compile("Name: {{name}}");
-console.log(temp({ name: "Nils" }));
+
 var table;
+
 const defaultConfig = {
   paging: true,
   lengthChange: true,
@@ -47,22 +45,27 @@ const expandColumn = {
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
   var obj = JSON.parse(json); // data from FM is a string
-  var data = obj.data;
-  var config = obj.config;
-  const expand = config.expand;
-  var dtFormat = config.dtFormat ? config.dtFormat : "MM/DD/YYYY";
-  const globalConfig = config.globals || {};
-  var script = config.script;
-  var sortConfig = config.sortEmptyToBottom;
-  const sort = sortConfig === false ? sortConfig : true;
-  var columns = obj.columns;
+
+  const { data, config, columns } = obj;
+  const {
+    expand,
+    globals: globalConfig = {},
+    dtFormat = "MM/DD/YY",
+    script,
+    sortEmptyToBottom: sort = true,
+  } = config;
+
+  let expandClickSet = true;
+
   var nameType = $.fn.dataTable.absoluteOrder({
     value: "",
     position: "bottom",
   });
   let rows = "";
 
-  const format = (d) => {
+  const globals = { ...defaultConfig, ...globalConfig };
+
+  const buildExpandTableRow = (d) => {
     const data = d; // `d` is the original data object for the row
     rows = "";
     const tableStr = `<table class=" table subTable">`;
@@ -115,9 +118,11 @@ window.loadData = function (json) {
       : null;
     return elm;
   });
+
   if (expand) {
     columns.unshift(expandColumn);
   }
+
   template = columns
     .map((elm) => elm.data)
     .reduce((acc, curr) => ((acc[curr] = ""), acc), {});
@@ -132,8 +137,6 @@ window.loadData = function (json) {
     };
   };
 
-  const globals = { ...defaultConfig, ...globalConfig };
-
   dataUpdated.forEach(function (d) {
     d.render = d.ellipsis ? ell(d.ellipsis) : undefined;
   });
@@ -142,18 +145,16 @@ window.loadData = function (json) {
 
   // Create the DataTable, after destroying it if already exists
   if (table) table.destroy();
-
   table = $("#example").DataTable(globals);
 
   // Add the click handler to the row, after removing it if already exists
   if (script) {
     $("#example tbody").off("click");
     $("#example tbody").on("click", "td.dt-control", function (e) {
-      var data = table.row(this).data();
-      console.log({ data });
       var tr = $(this).closest("tr");
       var tdi = tr.find("i.fa");
       var row = table.row(tr);
+
       if (row.child.isShown()) {
         // This row is already open - close it
         row.child.hide();
@@ -162,30 +163,12 @@ window.loadData = function (json) {
         tdi.first().addClass("fa-caret-right");
       } else {
         // Open this row
-        row
-          .child(format(row.data()), "expand")
-          .show()
-          .on("click", ".data, .title", row.data(), function (e) {
-            const json = {
-              action: "click on expand data",
-              row: e.data,
-              value: row[e.target.id],
-              expand: {
-                rowName: e.target.id,
-                columnName: e.target.classList[1],
-                classList: e.target.classList,
-              },
-            };
-
-            FileMaker.PerformScript(script, JSON.stringify(json));
-          })
-          .stopPropagation();
+        row.child(buildExpandTableRow(row.data()), "expand").show();
         $(row.child()).addClass("smallTable"); // row.child(className="expand")
         tr.addClass("shown");
         tdi.first().removeClass("fa-caret-right");
         tdi.first().addClass("fa-caret-down");
       }
-      e.stopPropagation();
     });
 
     table.on("user-select", function (e, dt, type, cell, originalEvent) {
@@ -202,15 +185,35 @@ window.loadData = function (json) {
         const value = cell.data();
         const col = table.column(this).index();
         const row = table.row(this).index();
-        const json = { value, column: columns[col], row: dataUpdated[row] };
-        console.log(json);
+        const json = {
+          location: "row",
+          value,
+          column: columns[col],
+          row: dataUpdated[row],
+        };
+        console.log(this);
         FileMaker.PerformScript(script, JSON.stringify(json));
       }
     );
+    $("#example tbody").on("click", ".data, .title", function (e) {
+      const row = table
+        .row(this.closest(".smallTable").previousElementSibling)
+        .data();
+      const json = {
+        location: "expand",
+        row,
+        value: row[e.target.id],
+        expand: {
+          id: e.target.id,
+          classList: e.target.classList,
+        },
+      };
 
-    // Add event listener for opening and closing details
-
-    // $('#example tbody').on('click', 'td.dt-control', function (e) {e.preventDefault();});
+      FileMaker.PerformScript(script, JSON.stringify(json));
+      console.log({
+        a: e,
+      });
+    });
   }
   $.fn.dataTable.ext.errMode = "none";
 };
