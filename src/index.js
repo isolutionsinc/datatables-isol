@@ -204,15 +204,13 @@ window.loadData = function (json) {
         row,
         value: row[e.target.id],
         expand: {
-          id: e.target.id,
+          id: e.target.closest(".expand").id,
           classList: e.target.classList,
         },
       };
 
       FileMaker.PerformScript(script, JSON.stringify(json));
-      console.log({
-        a: e,
-      });
+      console.log(e.target.closest(".expand").id);
     });
   }
   $.fn.dataTable.ext.errMode = "none";
