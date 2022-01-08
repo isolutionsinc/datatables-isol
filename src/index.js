@@ -61,7 +61,8 @@ window.loadData = function (json) {
     position: "bottom",
   });
   let rows = "";
-  function format(d) {
+
+  const format = (d) => {
     const data = d; // `d` is the original data object for the row
     rows = "";
     const tableStr = `<table class=" table subTable">`;
@@ -72,13 +73,16 @@ window.loadData = function (json) {
       const templateRow = template(d);
       rows =
         rows +
-        `<tr><td class="expand" width="20%">${e.title}</td><td class="expand">${
+        `<tr><td class="expand title" id="${e.data}" width="20%">${
+          e.title
+        }</td><td class="expand data" id="${e.data}">${
           e.columnType === "template" ? templateRow : d[e.data] || ""
         }</td></tr>`;
       return rows;
     });
     return tableStr + rows + tableEnd;
-  }
+  };
+
   columns.forEach((elm) => {
     sort ? (elm.type = nameType) : (elm.type = "");
     elm.columnType === "button"
@@ -146,7 +150,7 @@ window.loadData = function (json) {
     $("#example tbody").off("click");
     $("#example tbody").on("click", "td.dt-control", function (e) {
       var data = table.row(this).data();
-      console.log("data", data);
+      console.log({ data });
       var tr = $(this).closest("tr");
       var tdi = tr.find("i.fa");
       var row = table.row(tr);
@@ -158,7 +162,24 @@ window.loadData = function (json) {
         tdi.first().addClass("fa-caret-right");
       } else {
         // Open this row
-        row.child(format(row.data()), "expand").show();
+        row
+          .child(format(row.data()), "expand")
+          .show()
+          .on("click", ".data, .title", row.data(), function (e) {
+            const json = {
+              action: "click on expand data",
+              row: e.data,
+              value: row[e.target.id],
+              expand: {
+                rowName: e.target.id,
+                columnName: e.target.classList[1],
+                classList: e.target.classList,
+              },
+            };
+
+            FileMaker.PerformScript(script, JSON.stringify(json));
+          })
+          .stopPropagation();
         $(row.child()).addClass("smallTable"); // row.child(className="expand")
         tr.addClass("shown");
         tdi.first().removeClass("fa-caret-right");
@@ -187,12 +208,6 @@ window.loadData = function (json) {
       }
     );
 
-    $("#example tbody td").on("click", "expand", function () {
-      // alert(d);
-      const json = { value, column: columns[col], row: dataUpdated[row] };
-      console.log(json);
-      FileMaker.PerformScript(script, JSON.stringify(json));
-    });
     // Add event listener for opening and closing details
 
     // $('#example tbody').on('click', 'td.dt-control', function (e) {e.preventDefault();});
