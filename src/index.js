@@ -1,19 +1,6 @@
 const Handlebars = require("handlebars");
 const temp = Handlebars.compile("Name: {{name}}");
 
-var table;
-
-const defaultConfig = {
-  paging: true,
-  lengthChange: true,
-  order: [1, "asc"],
-  searching: true,
-  scrollY: $(window).height() - 150,
-  height: "100%",
-  colReorder: true,
-};
-let template;
-
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   "non-empty-string-desc": function (str1, str2) {
     if (str1 == "" && str2 != "") return 1;
@@ -30,6 +17,20 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   },
 });
 
+let table;
+let rows = "";
+let template;
+
+const defaultConfig = {
+  paging: true,
+  lengthChange: true,
+  order: [1, "asc"],
+  searching: true,
+  scrollY: $(window).height() - 150,
+  height: "100%",
+  colReorder: true,
+};
+
 const expandColumn = {
   className: "dt-control",
   orderable: false,
@@ -44,8 +45,7 @@ const expandColumn = {
 
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
-  var obj = JSON.parse(json); // data from FM is a string
-
+  const obj = JSON.parse(json); // data from FM is a string
   const { data, config, columns } = obj;
   const {
     expand,
@@ -55,19 +55,15 @@ window.loadData = function (json) {
     sortEmptyToBottom: sort = true,
   } = config;
 
-  let expandClickSet = true;
+  const globals = { ...defaultConfig, ...globalConfig };
 
-  var nameType = $.fn.dataTable.absoluteOrder({
+  const nameType = $.fn.dataTable.absoluteOrder({
     value: "",
     position: "bottom",
   });
-  let rows = "";
-
-  const globals = { ...defaultConfig, ...globalConfig };
 
   const buildExpandTableRow = (d) => {
     const data = d; // `d` is the original data object for the row
-    rows = "";
     const tableStr = `<table class=" table subTable">`;
     const tableEnd = `</table>`;
     expand.forEach((e) => {
@@ -109,7 +105,7 @@ window.loadData = function (json) {
           return moment(data).format(dtFormat);
         })
       : null;
-    elm.columnType === "template"
+    elm.templateString
       ? (elm.render = function (data, type, row, meta) {
           const tempString = elm.templateString;
           const template = Handlebars.compile(tempString);
@@ -118,6 +114,8 @@ window.loadData = function (json) {
       : null;
     return elm;
   });
+
+  console.log(columns);
 
   if (expand) {
     columns.unshift(expandColumn);
