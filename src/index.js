@@ -24,7 +24,7 @@ let template;
 const defaultConfig = {
   paging: true,
   lengthChange: true,
-  order: [1, "asc"],
+  order: [0, "asc"],
   searching: true,
   scrollY: $(window).height() - 150,
   height: "100%",
@@ -126,6 +126,7 @@ window.loadData = function (json) {
 
   if (expand) {
     columns.unshift(expandColumn);
+    dtPayload.order[0]++;
   }
 
   template = columns
