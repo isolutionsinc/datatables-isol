@@ -146,70 +146,70 @@ window.loadData = function (json) {
   table = $("#example").DataTable(globals);
 
   // Add the click handler to the row, after removing it if already exists
-  if (script) {
-    $("#example tbody").off("click");
-    $("#example tbody").on("click", "td.dt-control", function (e) {
-      var tr = $(this).closest("tr");
-      var tdi = tr.find("i.fa");
-      var row = table.row(tr);
 
-      if (row.child.isShown()) {
-        // This row is already open - close it
-        row.child.hide();
-        tr.removeClass("shown");
-        tdi.first().removeClass("fa-caret-down");
-        tdi.first().addClass("fa-caret-right");
-      } else {
-        // Open this row
-        row.child(buildExpandTableRow(row.data()), "expand").show();
-        $(row.child()).addClass("smallTable"); // row.child(className="expand")
-        tr.addClass("shown");
-        tdi.first().removeClass("fa-caret-right");
-        tdi.first().addClass("fa-caret-down");
-      }
-    });
+  $("#example tbody").off("click");
+  $("#example tbody").on("click", "td.dt-control", function (e) {
+    var tr = $(this).closest("tr");
+    var tdi = tr.find("i.fa");
+    var row = table.row(tr);
 
-    table.on("user-select", function (e, dt, type, cell, originalEvent) {
-      if ($(cell.node()).hasClass("dt-control")) {
-      }
-    });
+    if (row.child.isShown()) {
+      // This row is already open - close it
+      row.child.hide();
+      tr.removeClass("shown");
+      tdi.first().removeClass("fa-caret-down");
+      tdi.first().addClass("fa-caret-right");
+    } else {
+      // Open this row
+      row.child(buildExpandTableRow(row.data()), "expand").show();
+      $(row.child()).addClass("smallTable"); // row.child(className="expand")
+      tr.addClass("shown");
+      tdi.first().removeClass("fa-caret-right");
+      tdi.first().addClass("fa-caret-down");
+    }
+  });
 
-    $("#example tbody").on(
-      "click",
-      "td:not(.dt-control):not(.expand)",
-      function () {
-        var cell = table.cell(this);
-        const cellObj = cell[0][0];
-        const value = cell.data();
-        const col = table.column(this).index();
-        const row = table.row(this).index();
-        const json = {
-          location: "row",
-          value,
-          column: columns[col],
-          row: dataUpdated[row],
-        };
-        console.log(this);
-        FileMaker.PerformScript(script, JSON.stringify(json));
-      }
-    );
-    $("#example tbody").on("click", ".data, .title", function (e) {
-      const row = table
-        .row(this.closest(".smallTable").previousElementSibling)
-        .data();
+  table.on("user-select", function (e, dt, type, cell, originalEvent) {
+    if ($(cell.node()).hasClass("dt-control")) {
+    }
+  });
+
+  $("#example tbody").on(
+    "click",
+    "td:not(.dt-control):not(.expand)",
+    function () {
+      var cell = table.cell(this);
+      const cellObj = cell[0][0];
+      const value = cell.data();
+      const col = table.column(this).index();
+      const row = table.row(this).index();
       const json = {
-        location: "expand",
-        row,
-        value: row[e.target.id],
-        expand: {
-          id: e.target.closest(".expand").id,
-          classList: e.target.classList,
-        },
+        location: "row",
+        value,
+        column: columns[col],
+        row: dataUpdated[row],
       };
+      script && FileMaker.PerformScript(script, JSON.stringify(json));
+    }
+  );
+  $("#example tbody").on("click", ".data, .title", function (e) {
+    const row = table
+      .row(this.closest(".smallTable").previousElementSibling)
+      .data();
+    const json = {
+      location: "expand",
+      row,
+      value: row[e.target.id],
+      expand: {
+        id: e.target.closest(".expand").id,
+        classList: e.target.classList,
+      },
+    };
 
-      FileMaker.PerformScript(script, JSON.stringify(json));
-      console.log(e.target.closest(".expand").id);
-    });
-  }
+    script && FileMaker.PerformScript(script, JSON.stringify(json));
+    console.log(e.target.closest(".expand").id);
+  });
+
+  table.columns.adjust();
   $.fn.dataTable.ext.errMode = "none";
 };
