@@ -91,7 +91,7 @@ window.loadData = function (json) {
       : null;
     elm.columnType === "thumbnail"
       ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" style="height: 100px" class="img-responsive my-pointer" />`;
+          return `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
         })
       : null;
     elm.columnType === "img"
@@ -115,7 +115,7 @@ window.loadData = function (json) {
     return elm;
   });
 
-  console.log(columns);
+  // console.log(columns);
 
   if (expand) {
     columns.unshift(expandColumn);
@@ -142,7 +142,7 @@ window.loadData = function (json) {
   globals.data = dataUpdated;
 
   // Create the DataTable, after destroying it if already exists
-  if (table) table.destroy();
+  table && table.destroy();
   table = $("#example").DataTable(globals);
 
   // Add the click handler to the row, after removing it if already exists
@@ -207,9 +207,8 @@ window.loadData = function (json) {
     };
 
     script && FileMaker.PerformScript(script, JSON.stringify(json));
-    console.log(e.target.closest(".expand").id);
-  });
 
-  table.columns.adjust();
+    // console.log(e.target.closest(".expand").id);
+  });
   $.fn.dataTable.ext.errMode = "none";
 };
