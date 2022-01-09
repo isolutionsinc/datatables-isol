@@ -49,18 +49,13 @@ window.loadData = function (json) {
   const { data, config, columns } = obj;
   const {
     expand,
-    globals: globalConfig = {},
-    dtFormat = "MM/DD/YY",
     script,
-    sortEmptyToBottom: sort = true,
+    sortEmptyToBottom = false,
+    dtFormat = "MM/DD/YY",
+    globals: globalConfig = {},
   } = config;
 
-  const globals = { ...defaultConfig, ...globalConfig };
-
-  const nameType = $.fn.dataTable.absoluteOrder({
-    value: "",
-    position: "bottom",
-  });
+  const dtPayload = { ...defaultConfig, ...globalConfig };
 
   const buildExpandTableRow = (d) => {
     const data = d; // `d` is the original data object for the row
@@ -83,35 +78,47 @@ window.loadData = function (json) {
   };
 
   columns.forEach((elm) => {
-    sort ? (elm.type = nameType) : (elm.type = "");
-    elm.columnType === "button"
-      ? (elm.render = function (data, type, row, meta) {
-          return "<button class='btn btn-primary middle'>Download</button>";
-        })
-      : null;
-    elm.columnType === "thumbnail"
-      ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
-        })
-      : null;
-    elm.columnType === "img"
-      ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" class="img-responsive my-pointer" />`;
-        })
-      : null;
+    sortEmptyToBottom
+      ? (elm.type = $.fn.dataTable.absoluteOrder({
+          value: "",
+          position: "bottom",
+        }))
+      : (elm.type = "");
 
-    elm.columnType === "dateTime"
-      ? (elm.render = function (data, type, row, meta) {
+    switch (elm.columnType) {
+      case "button":
+        elm.render = function (data, type, row, meta) {
+          return "<button class='btn btn-primary middle'>Download</button>";
+        };
+        break;
+
+      case "thumbnail":
+        elm.render = function (data, type, row, meta) {
+          return `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
+        };
+        elm.width = "150px";
+        break;
+
+      case "img":
+        elm.render = function (data, type, row, meta) {
+          return `<img src="${data}" class="img-responsive my-pointer" />`;
+        };
+        break;
+
+      case "dateTime":
+        elm.render = function (data, type, row, meta) {
           return moment(data).format(dtFormat);
-        })
-      : null;
-    elm.templateString
-      ? (elm.render = function (data, type, row, meta) {
-          const tempString = elm.templateString;
-          const template = Handlebars.compile(tempString);
-          return template(row);
-        })
-      : null;
+        };
+        break;
+    }
+
+    elm.templateString &&
+      (elm.render = function (data, type, row, meta) {
+        const tempString = elm.templateString;
+        const template = Handlebars.compile(tempString);
+        return template(row);
+      });
+
     return elm;
   });
 
@@ -138,12 +145,12 @@ window.loadData = function (json) {
   dataUpdated.forEach(function (d) {
     d.render = d.ellipsis ? ell(d.ellipsis) : undefined;
   });
-  globals.columns = columns;
-  globals.data = dataUpdated;
+  dtPayload.columns = columns;
+  dtPayload.data = dataUpdated;
 
   // Create the DataTable, after destroying it if already exists
   table && table.destroy();
-  table = $("#example").DataTable(globals);
+  table = $("#example").DataTable(dtPayload);
 
   // Add the click handler to the row, after removing it if already exists
 

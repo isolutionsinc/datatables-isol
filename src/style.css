@@ -14,6 +14,10 @@ body {
 button.main {
   background-color: red;
 }
+td.compact {
+  padding: 0px;
+}
+
 table {
   color: black;
   font-size: 12px;
