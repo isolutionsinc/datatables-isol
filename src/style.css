@@ -53,6 +53,7 @@ div.dataTables_wrapper
   background-color: #8228b4;
 }
 td.dt-control {
+  padding: 0px;
   text-align: center;
   font-size: 24px;
   color: black;

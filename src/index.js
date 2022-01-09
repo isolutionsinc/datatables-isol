@@ -37,7 +37,7 @@ const expandColumn = {
   columnType: "arrow",
   data: null,
   defaultContent: "",
-  width: "55px",
+  width: "32px",
   render: function () {
     return '<i class="fa fa-caret-right" aria-hidden="true"></i>';
   },
