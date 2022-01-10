@@ -21,6 +21,10 @@ let table;
 let rows = "";
 let template;
 
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 const defaultConfig = {
   paging: true,
   lengthChange: true,
@@ -86,6 +90,12 @@ window.loadData = function (json) {
       : (elm.type = "");
 
     switch (elm.columnType) {
+      case "number":
+        elm.render = function (data, type, row, meta) {
+          return numberWithCommas(data);
+        };
+        break;
+
       case "button":
         elm.render = function (data, type, row, meta) {
           return "<button class='btn btn-primary middle'>Download</button>";
@@ -165,15 +175,13 @@ window.loadData = function (json) {
       // This row is already open - close it
       row.child.hide();
       tr.removeClass("shown");
-      tdi.first().removeClass("fa-caret-down");
-      tdi.first().addClass("fa-caret-right");
+      tdi.first().addClass("fa-caret-right").removeClass("fa-caret-down");
     } else {
       // Open this row
       row.child(buildExpandTableRow(row.data()), "expand").show();
       $(row.child()).addClass("smallTable"); // row.child(className="expand")
       tr.addClass("shown");
-      tdi.first().removeClass("fa-caret-right");
-      tdi.first().addClass("fa-caret-down");
+      tdi.first().addClass("fa-caret-down").removeClass("fa-caret-right");
     }
   });
 
