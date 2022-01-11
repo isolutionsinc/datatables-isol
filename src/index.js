@@ -169,7 +169,6 @@ window.loadData = function (json) {
   table = $("#example").DataTable(dtPayload);
 
   // Add the click handler to the row, after removing it if already exists
-
   $("#example tbody").off("click");
   $("#example tbody").on("click", "td.dt-control", function (e) {
     var tr = $(this).closest("tr");
@@ -194,6 +193,9 @@ window.loadData = function (json) {
     if ($(cell.node()).hasClass("dt-control")) {
     }
   });
+
+  // hide result count when paging is off
+  dtPayload.paging === false && $("#example_info").remove();
 
   $("#example tbody").on(
     "click",
@@ -231,5 +233,8 @@ window.loadData = function (json) {
 
     // console.log(e.target.closest(".expand").id);
   });
+
+  // console.log({ dtPayload });
+
   $.fn.dataTable.ext.errMode = "none";
 };
