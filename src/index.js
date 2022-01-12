@@ -21,9 +21,6 @@ let table;
 let rows = "";
 let template;
 
-const numberWithCommas = (x) =>
-  x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
 const defaultConfig = {
   paging: true,
   lengthChange: true,
@@ -88,16 +85,21 @@ window.loadData = function (json) {
         }))
       : (elm.type = "");
 
+    if (elm.numberFormat)
+      elm.render = function (data, type, row, meta) {
+        return numeral(data).format(elm.numberFormat);
+      };
+
     switch (elm.columnType) {
       case "percent":
         elm.render = function (data, type, row, meta) {
-          return data * 100 + "%";
+          return numeral(data * 100).format("0,0%");
         };
         break;
 
       case "number":
         elm.render = function (data, type, row, meta) {
-          return numberWithCommas(data);
+          return numeral(data).format("0,0");
         };
         break;
 
