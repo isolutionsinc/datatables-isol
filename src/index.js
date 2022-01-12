@@ -145,6 +145,17 @@ window.loadData = function (json) {
         return template(row);
       });
 
+    if (elm.colorSettings) {
+      elm.render = function (data, type, row, meta) {
+        const { numberFormat, success, warning } = elm.colorSettings;
+        const dataFormatted = numeral(data).format(numberFormat || "0,0");
+        const color =
+          data >= success ? "success" : data >= warning ? "warning" : "danger";
+        return `<div style="height:100%"class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
+      };
+      elm.className = "compact";
+    }
+
     return elm;
   });
 
