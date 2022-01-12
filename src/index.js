@@ -17,6 +17,14 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   },
 });
 
+Handlebars.registerHelper("percent", function (data) {
+  return numeral(data).format("0,0%");
+});
+
+Handlebars.registerHelper("numeral", function (data, format) {
+  return numeral(data).format(format);
+});
+
 let table;
 let rows = "";
 let template;
@@ -131,6 +139,7 @@ window.loadData = function (json) {
 
     elm.templateString &&
       (elm.render = function (data, type, row, meta) {
+        console.log({ data, type, row, meta });
         const tempString = elm.templateString;
         const template = Handlebars.compile(tempString);
         return template(row);
