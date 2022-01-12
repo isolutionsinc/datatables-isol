@@ -93,7 +93,7 @@ window.loadData = function (json) {
     switch (elm.columnType) {
       case "percent":
         elm.render = function (data, type, row, meta) {
-          return numeral(data * 100).format("0,0%");
+          return numeral(data).format("0,0%");
         };
         break;
 
