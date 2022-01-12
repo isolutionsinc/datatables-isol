@@ -54,7 +54,8 @@ const expandColumn = {
 // exposing loadData to FileMaker Script
 window.loadData = function (json) {
   const obj = JSON.parse(json); // data from FM is a string
-  const { data, config, columns } = obj;
+
+  let { data, config, columns } = obj;
   const {
     expand,
     script,
@@ -62,6 +63,15 @@ window.loadData = function (json) {
     dtFormat = "MM/DD/YY",
     globals: globalConfig = {},
   } = config;
+
+  if (config.dataPath) {
+    data = data[config.dataPath];
+  }
+
+  if (!Array.isArray(data)) {
+    data = Object.values(data);
+  }
+  console.log({ data });
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
