@@ -149,7 +149,7 @@ window.loadData = function (json) {
       elm.render = function (data, type, row, meta) {
         const { numberFormat, success, warning } = elm.colorSettings;
         const dataFormatted =
-          data !== "number"
+          typeof data !== "number"
             ? data
             : numeral(data).format(numberFormat || "0,0");
         const color =
