@@ -66,21 +66,19 @@ window.loadData = function (json) {
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
   const buildExpandTableRow = (d) => {
+    console.log(d);
     const data = d; // `d` is the original data object for the row
     const tableStr = `<table class=" table subTable">`;
     const tableEnd = `</table>`;
-    expand.forEach((e) => {
+    const rows = expand.map((e) => {
       const tempString = e.templateString || "";
       const template = Handlebars.compile(tempString);
       const templateRow = template(d);
-      rows =
-        rows +
-        `<tr><td class="expand title" id="${e.data}" width="20%">${
-          e.title
-        }</td><td class="expand data" id="${e.data}">${
-          e.columnType === "template" ? templateRow : d[e.data] || ""
-        }</td></tr>`;
-      return rows;
+      return `<tr><td class="expand title" id="${e.data}" width="20%">${
+        e.title
+      }</td><td class="expand data" id="${e.data}">${
+        e.columnType === "template" ? templateRow : d[e.data] || ""
+      }</td></tr>`;
     });
     return tableStr + rows + tableEnd;
   };
@@ -218,6 +216,7 @@ window.loadData = function (json) {
       tr.addClass("shown");
       tdi.first().addClass("fa-caret-down").removeClass("fa-caret-right");
     }
+    e.stopPropagation();
   });
 
   table.on("user-select", function (e, dt, type, cell, originalEvent) {
