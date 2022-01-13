@@ -1,3 +1,6 @@
+let table;
+let template;
+
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   "non-empty-string-desc": function (str1, str2) {
     if (str1 == "" && str2 != "") return 1;
@@ -22,9 +25,6 @@ Handlebars.registerHelper("numeral", function (data, format) {
   return numeral(data).format(format);
 });
 
-let table;
-let template;
-
 const defaultConfig = {
   paging: true,
   lengthChange: true,
@@ -48,41 +48,44 @@ const expandColumn = {
 };
 
 // exposing loadData to FileMaker Script
-window.loadData = function (json) {
-  const obj = JSON.parse(json); // data from FM is a string
+window.loadData = function (fmData) {
+  const fmJson = JSON.parse(fmData); // data from FM is a string
 
-  let { data, config, columns } = obj;
+  let { data, config, columns } = fmJson;
   const {
     expand,
     script,
+    dataPath,
     sortEmptyToBottom = false,
     dtFormat = "MM/DD/YY",
     globals: globalConfig = {},
   } = config;
 
   // extract data from path if provided
-  if (config.dataPath) {
-    data = data[config.dataPath];
+  if (dataPath) {
+    data = data[dataPath];
   }
   // convert data into array if it is an object
   if (!Array.isArray(data)) {
     data = Object.values(data);
   }
-  console.log({ data });
+  // console.log({ data });
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
-  const buildExpandTableRow = (rowData) => {
-    const rows = expand.map((e) => {
-      const { title, data, render, className = "" } = e;
-      const renderedData = e.render
-        ? e.render(rowData[e.data])
-        : rowData[e.data]
-        ? rowData[e.data]
-        : "";
-      return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
-    });
-    return `<table class=" table subTable">${rows}</table>`;
+  const buildExpandTableRowHtml = (rowData) => {
+    const rows = expand
+      .map((e) => {
+        const { title, data, render, className = "" } = e;
+        const renderedData = e.render
+          ? e.render(rowData[e.data])
+          : rowData[e.data]
+          ? rowData[e.data]
+          : "";
+        return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
+      })
+      .join(" ");
+    return `<table class="table subTable">${rows}</table>`;
   };
 
   const setColumn = (column) => {
@@ -130,7 +133,7 @@ window.loadData = function (json) {
 
     column.templateString &&
       (column.render = function (data, type, row, meta) {
-        console.log({ data, type, row, meta });
+        // console.log({ data, type, row, meta });
         const tempString = column.templateString;
         const template = Handlebars.compile(tempString);
         return template(row);
@@ -160,8 +163,8 @@ window.loadData = function (json) {
   columns.forEach(setColumn);
   expand.forEach(setColumn);
 
-  console.log({ columns, expand });
-  console.log({ render: expand[1].render(1024) });
+  // console.log({ columns, expand });
+  // console.log({ render: expand[1].render(1024) });
 
   // add expand column to table and shift the current default sort over
   if (expand) {
@@ -207,7 +210,10 @@ window.loadData = function (json) {
       tdi.first().addClass("fa-caret-right").removeClass("fa-caret-down");
     } else {
       // Open this row
-      row.child(buildExpandTableRow(row.data()), "expand").show();
+      const childHtml = buildExpandTableRowHtml(row.data());
+      console.log({ childHtml });
+      row.child(childHtml, "expand").show();
+      console.log(row.child().html());
       $(row.child()).addClass("smallTable"); // row.child(className="expand")
       tr.addClass("shown");
       tdi.first().addClass("fa-caret-down").removeClass("fa-caret-right");
@@ -254,10 +260,10 @@ window.loadData = function (json) {
 
     script && FileMaker.PerformScript(script, JSON.stringify(json));
 
-    // console.log(e.target.closest(".expand").id);
+    // // console.log(e.target.closest(".expand").id);
   });
 
-  // console.log({ dtPayload });
+  // // console.log({ dtPayload });
 
   $.fn.dataTable.ext.errMode = "none";
 };
