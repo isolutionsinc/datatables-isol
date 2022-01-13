@@ -72,26 +72,26 @@ window.loadData = function (json) {
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
-  const buildExpandTableRow = (d) => {
-    const data = d; // `d` is the original data object for the row
-    const tableStr = `<table class=" table subTable">`;
-    const tableEnd = `</table>`;
+  const buildExpandTableRow = (rowData) => {
     const rows = expand.map((e) => {
       console.log({ e });
       const tempString = e.templateString || "";
       const template = Handlebars.compile(tempString);
-      const templateRow = template(d);
+      const templateRow = template(rowData);
       return `<tr><td class="expand title" id="${e.data}" width="20%">${
         e.title
       }</td><td class="expand data" id="${e.data}">${
-        e.columnType === "template" ? templateRow : d[e.data] || ""
+        e.render
+          ? e.render(rowData[e.data])
+          : rowData[e.data]
+          ? rowData[e.data]
+          : ""
       }</td></tr>`;
     });
-    return tableStr + rows + tableEnd;
+    return `<table class=" table subTable">${rows}</table>`;
   };
 
-  // TODO move this to a separate function and share with expand
-  columns.forEach((column) => {
+  const setColumn = (column) => {
     sortEmptyToBottom
       ? (column.type = $.fn.dataTable.absoluteOrder({
           value: "",
@@ -161,10 +161,14 @@ window.loadData = function (json) {
       };
       column.className = "compact";
     }
-  });
+  };
 
-  console.log({ columns });
-  console.log({ render: columns[1].render(1024) });
+  // TODO move this to a separate function and share with expand
+  columns.forEach(setColumn);
+  expand.forEach(setColumn);
+
+  console.log({ columns, expand });
+  console.log({ render: expand[1].render(1024) });
 
   // add expand column to table and shift the current default sort over
   if (expand) {
