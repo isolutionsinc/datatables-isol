@@ -84,7 +84,7 @@ table.dataTable tbody td {
   width: 150px;
   height: auto;
 }
-example tbody tr td.my-pointer {
+#example tbody tr td.my-pointer {
   cursor: pointer;
 }
 

@@ -74,19 +74,13 @@ window.loadData = function (json) {
 
   const buildExpandTableRow = (rowData) => {
     const rows = expand.map((e) => {
-      console.log({ e });
-      const tempString = e.templateString || "";
-      const template = Handlebars.compile(tempString);
-      const templateRow = template(rowData);
-      return `<tr><td class="expand title" id="${e.data}" width="20%">${
-        e.title
-      }</td><td class="expand data" id="${e.data}">${
-        e.render
-          ? e.render(rowData[e.data])
-          : rowData[e.data]
-          ? rowData[e.data]
-          : ""
-      }</td></tr>`;
+      const { title, data, render, className = "" } = e;
+      const renderedData = e.render
+        ? e.render(rowData[e.data])
+        : rowData[e.data]
+        ? rowData[e.data]
+        : "";
+      return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
     });
     return `<table class=" table subTable">${rows}</table>`;
   };
@@ -163,7 +157,6 @@ window.loadData = function (json) {
     }
   };
 
-  // TODO move this to a separate function and share with expand
   columns.forEach(setColumn);
   expand.forEach(setColumn);
 
