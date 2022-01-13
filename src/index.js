@@ -47,80 +47,6 @@ const expandColumn = {
   },
 };
 
-// Functions
-
-const setColumns = (column, sortEmptyToBottom = sortEmptyToBottom) => {
-  sortEmptyToBottom
-    ? (column.type = $.fn.dataTable.absoluteOrder({
-        value: "",
-        position: "bottom",
-      }))
-    : (column.type = "");
-
-  if (column.numberFormat)
-    column.render = function (data) {
-      return numeral(data).format(column.numberFormat);
-    };
-
-  switch (column.columnType) {
-    case "percent":
-      column.render = (data) => numeral(data).format("0,0%");
-      break;
-
-    case "number":
-      column.render = (data) => numeral(data).format("0,0");
-      break;
-
-    case "button":
-      column.render = (data) =>
-        "<button class='btn btn-primary middle'>Download</button>";
-      break;
-
-    case "thumbnail":
-      column.render = (data) =>
-        `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
-      column.width = "150px";
-      break;
-
-    case "img":
-      column.render = (data) =>
-        `<img src="${data}" class="img-responsive my-pointer" />`;
-      break;
-
-    case "dateTime":
-      column.render = (data) => moment(data).format(dtFormat);
-      break;
-  }
-
-  column.templateString &&
-    (column.render = function (data, type, row, meta) {
-      // console.log({ data, type, row, meta });
-      const tempString = column.templateString;
-      const template = Handlebars.compile(tempString);
-      return template(row);
-    });
-
-  if (column.colorSettings) {
-    column.render = function (data, type, row, meta) {
-      const { numberFormat, success, warning } = column.colorSettings;
-      const dataFormatted =
-        typeof data !== "number"
-          ? data
-          : numeral(data).format(numberFormat || "0,0");
-      const color =
-        typeof data !== "number"
-          ? "light"
-          : data >= success
-          ? "success"
-          : data >= warning
-          ? "warning"
-          : "danger";
-      return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
-    };
-    column.className = "compact";
-  }
-};
-
 const buildExpandTableRowHtml = (rowData, expand) => {
   const rows = expand
     .map((e) => {
@@ -146,7 +72,6 @@ window.loadData = function (fmData) {
     script,
     dataPath,
     sortEmptyToBottom = false,
-    dtFormat = "MM/DD/YY",
     globals: globalConfig = {},
   } = config;
 
@@ -160,6 +85,78 @@ window.loadData = function (fmData) {
   }
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
+
+  const setColumns = (column) => {
+    sortEmptyToBottom
+      ? (column.type = $.fn.dataTable.absoluteOrder({
+          value: "",
+          position: "bottom",
+        }))
+      : (column.type = "");
+
+    if (column.numberFormat)
+      column.render = function (data) {
+        return numeral(data).format(column.numberFormat);
+      };
+
+    switch (column.columnType) {
+      case "percent":
+        column.render = (data) => numeral(data).format("0,0%");
+        break;
+
+      case "number":
+        column.render = (data) => numeral(data).format("0,0");
+        break;
+
+      case "button":
+        column.render = (data) =>
+          "<button class='btn btn-primary middle'>Download</button>";
+        break;
+
+      case "thumbnail":
+        column.render = (data) =>
+          `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
+        column.width = "150px";
+        break;
+
+      case "img":
+        column.render = (data) =>
+          `<img src="${data}" class="img-responsive my-pointer" />`;
+        break;
+
+      case "dateTime":
+        column.render = (data) => moment(data).format(dtFormat || "MM/DD/YY");
+        break;
+    }
+
+    column.templateString &&
+      (column.render = function (data, type, row, meta) {
+        // console.log({ data, type, row, meta });
+        const tempString = column.templateString;
+        const template = Handlebars.compile(tempString);
+        return template(row);
+      });
+
+    if (column.colorSettings) {
+      column.render = function (data, type, row, meta) {
+        const { numberFormat, success, warning } = column.colorSettings;
+        const dataFormatted =
+          typeof data !== "number"
+            ? data
+            : numeral(data).format(numberFormat || "0,0");
+        const color =
+          typeof data !== "number"
+            ? "light"
+            : data >= success
+            ? "success"
+            : data >= warning
+            ? "warning"
+            : "danger";
+        return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
+      };
+      column.className = "compact";
+    }
+  };
 
   // set render methods for columns and expand
   columns.forEach(setColumns);
