@@ -1,6 +1,3 @@
-const Handlebars = require("handlebars");
-const temp = Handlebars.compile("Name: {{name}}");
-
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   "non-empty-string-desc": function (str1, str2) {
     if (str1 == "" && str2 != "") return 1;
@@ -17,16 +14,15 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   },
 });
 
+// add helper functions to Handlebars
 Handlebars.registerHelper("percent", function (data) {
   return numeral(data).format("0,0%");
 });
-
 Handlebars.registerHelper("numeral", function (data, format) {
   return numeral(data).format(format);
 });
 
 let table;
-let rows = "";
 let template;
 
 const defaultConfig = {
@@ -64,10 +60,11 @@ window.loadData = function (json) {
     globals: globalConfig = {},
   } = config;
 
+  // extract data from path if provided
   if (config.dataPath) {
     data = data[config.dataPath];
   }
-
+  // convert data into array if it is an object
   if (!Array.isArray(data)) {
     data = Object.values(data);
   }
@@ -76,11 +73,11 @@ window.loadData = function (json) {
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
   const buildExpandTableRow = (d) => {
-    console.log(d);
     const data = d; // `d` is the original data object for the row
     const tableStr = `<table class=" table subTable">`;
     const tableEnd = `</table>`;
     const rows = expand.map((e) => {
+      console.log({ e });
       const tempString = e.templateString || "";
       const template = Handlebars.compile(tempString);
       const templateRow = template(d);
@@ -93,69 +90,61 @@ window.loadData = function (json) {
     return tableStr + rows + tableEnd;
   };
 
-  columns.forEach((elm) => {
+  // TODO move this to a separate function and share with expand
+  columns.forEach((column) => {
     sortEmptyToBottom
-      ? (elm.type = $.fn.dataTable.absoluteOrder({
+      ? (column.type = $.fn.dataTable.absoluteOrder({
           value: "",
           position: "bottom",
         }))
-      : (elm.type = "");
+      : (column.type = "");
 
-    if (elm.numberFormat)
-      elm.render = function (data, type, row, meta) {
-        return numeral(data).format(elm.numberFormat);
+    if (column.numberFormat)
+      column.render = function (data) {
+        return numeral(data).format(column.numberFormat);
       };
 
-    switch (elm.columnType) {
+    switch (column.columnType) {
       case "percent":
-        elm.render = function (data, type, row, meta) {
-          return numeral(data).format("0,0%");
-        };
+        column.render = (data) => numeral(data).format("0,0%");
         break;
 
       case "number":
-        elm.render = function (data, type, row, meta) {
-          return numeral(data).format("0,0");
-        };
+        column.render = (data) => numeral(data).format("0,0");
         break;
 
       case "button":
-        elm.render = function (data, type, row, meta) {
-          return "<button class='btn btn-primary middle'>Download</button>";
-        };
+        column.render = (data) =>
+          "<button class='btn btn-primary middle'>Download</button>";
         break;
 
       case "thumbnail":
-        elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
-        };
-        elm.width = "150px";
+        column.render = (data) =>
+          `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
+        column.width = "150px";
         break;
 
       case "img":
-        elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" class="img-responsive my-pointer" />`;
-        };
+        column.render = (data) =>
+          `<img src="${data}" class="img-responsive my-pointer" />`;
         break;
 
       case "dateTime":
-        elm.render = function (data, type, row, meta) {
-          return moment(data).format(dtFormat);
-        };
+        column.render = (data) => moment(data).format(dtFormat);
         break;
     }
 
-    elm.templateString &&
-      (elm.render = function (data, type, row, meta) {
+    column.templateString &&
+      (column.render = function (data, type, row, meta) {
         console.log({ data, type, row, meta });
-        const tempString = elm.templateString;
+        const tempString = column.templateString;
         const template = Handlebars.compile(tempString);
         return template(row);
       });
 
-    if (elm.colorSettings) {
-      elm.render = function (data, type, row, meta) {
-        const { numberFormat, success, warning } = elm.colorSettings;
+    if (column.colorSettings) {
+      column.render = function (data, type, row, meta) {
+        const { numberFormat, success, warning } = column.colorSettings;
         const dataFormatted =
           typeof data !== "number"
             ? data
@@ -170,16 +159,16 @@ window.loadData = function (json) {
             : "danger";
         return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
       };
-      elm.className = "compact";
+      column.className = "compact";
     }
-
-    return elm;
   });
 
-  // console.log(columns);
+  console.log({ columns });
+  console.log({ render: columns[1].render(1024) });
 
+  // add expand column to table and shift the current default sort over
   if (expand) {
-    columns.unshift(expandColumn);
+    columns = [expandColumn, ...columns];
     dtPayload.order[0]++;
   }
 
@@ -229,14 +218,10 @@ window.loadData = function (json) {
     e.stopPropagation();
   });
 
-  table.on("user-select", function (e, dt, type, cell, originalEvent) {
-    if ($(cell.node()).hasClass("dt-control")) {
-    }
-  });
-
   // hide result count when paging is off
   dtPayload.paging === false && $("#example_info").remove();
 
+  // add click event for rows
   $("#example tbody").on(
     "click",
     "td:not(.dt-control):not(.expand)",
@@ -255,6 +240,7 @@ window.loadData = function (json) {
       script && FileMaker.PerformScript(script, JSON.stringify(json));
     }
   );
+  // add click event for expand sections
   $("#example tbody").on("click", ".data, .title", function (e) {
     const row = table
       .row(this.closest(".smallTable").previousElementSibling)
