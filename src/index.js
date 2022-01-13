@@ -55,6 +55,14 @@ const buildExpandTableRowHtml = (rowData, expand) => {
       const renderedData = render
         ? e.render(rowData[rowDataLocation])
         : rowData[data] || "";
+
+      console.log({
+        data,
+        located: rowData[rowDataLocation],
+        rowDataLocation,
+        renderedData,
+      });
+
       return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
     })
     .join(" ");
@@ -71,6 +79,7 @@ window.loadData = function (fmData) {
     script,
     dataPath,
     sortEmptyToBottom = false,
+    dtFormat,
     globals: globalConfig = {},
   } = config;
 
@@ -97,6 +106,8 @@ window.loadData = function (fmData) {
       column.render = function (data) {
         return numeral(data).format(column.numberFormat);
       };
+
+    column.defaultContent = "";
 
     switch (column.columnType) {
       case "percent":
@@ -166,31 +177,17 @@ window.loadData = function (fmData) {
     columns = [expandColumn, ...columns];
     dtPayload.order[0]++;
   }
-  // ???
-  template = columns
-    .map((elm) => elm.data)
-    .reduce((acc, curr) => ((acc[curr] = ""), acc), {});
-  // ???
 
-  const dataUpdated = data.map((elm) => {
-    return { ...template, ...elm };
-  });
-  // ???
-  const ell = (c) => {
-    return function (data, type, row) {
-      return data.length > c ? data.substr(0, c) + "..." : data;
-    };
-  };
-  // ???
-  dataUpdated.forEach(function (d) {
-    d.render = d.ellipsis ? ell(d.ellipsis) : undefined;
-  });
   dtPayload.columns = columns;
-  dtPayload.data = dataUpdated;
+  dtPayload.data = data;
 
   // Create the DataTable, after destroying it if already exists
   table && table.destroy();
-  table = $("#example").DataTable(dtPayload);
+  try {
+    table = $("#example").DataTable(dtPayload);
+  } catch (error) {
+    console.log({ error });
+  }
 
   // Add the click handler to the row, after removing it if already exists
   $("#example tbody").off("click");
