@@ -51,11 +51,10 @@ const buildExpandTableRowHtml = (rowData, expand) => {
   const rows = expand
     .map((e) => {
       const { title, data, render, className = "" } = e;
+      const rowDataLocation = data.replace("\\", "");
       const renderedData = render
-        ? e.render(rowData[data])
-        : rowData[data]
-        ? rowData[data]
-        : "";
+        ? e.render(rowData[rowDataLocation])
+        : rowData[data] || "";
       return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
     })
     .join(" ");
@@ -208,9 +207,9 @@ window.loadData = function (fmData) {
     } else {
       // Open this row
       const childHtml = buildExpandTableRowHtml(row.data(), expand);
-      console.log({ childHtml });
+      // console.log({ childHtml });
       row.child(childHtml, "expand").show();
-      console.log(row.child().html());
+      // console.log(row.child().html());
       $(row.child()).addClass("smallTable"); // row.child(className="expand")
       tr.addClass("shown");
       tdi.first().addClass("fa-caret-down").removeClass("fa-caret-right");
