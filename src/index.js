@@ -56,30 +56,96 @@ const buildExpandTableRowHtml = (rowData, expand) => {
         ? e.render(rowData[rowDataLocation])
         : rowData[data] || "";
 
-      console.log({
-        data,
-        located: rowData[rowDataLocation],
-        rowDataLocation,
-        renderedData,
-      });
-
       return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
     })
     .join(" ");
   return `<table class="table subTable">${rows}</table>`;
 };
 
+const setColumns = (column, env) => {
+  const { dtFormat, sortEmptyToBottom } = env;
+  sortEmptyToBottom
+    ? (column.type = $.fn.dataTable.absoluteOrder({
+        value: "",
+        position: "bottom",
+      }))
+    : (column.type = "");
+
+  if (column.numberFormat)
+    column.render = function (data) {
+      return numeral(data).format(column.numberFormat);
+    };
+
+  column.defaultContent = "";
+
+  switch (column.columnType) {
+    case "percent":
+      column.render = (data) => numeral(data).format("0,0%");
+      break;
+
+    case "number":
+      column.render = (data) => numeral(data).format("0,0");
+      break;
+
+    case "button":
+      column.render = (data) =>
+        "<button class='btn btn-primary middle'>Download</button>";
+      break;
+
+    case "thumbnail":
+      column.render = (data) =>
+        `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
+      column.width = "150px";
+      break;
+
+    case "img":
+      column.render = (data) =>
+        `<img src="${data}" class="img-responsive my-pointer" />`;
+      break;
+
+    case "dateTime":
+      column.render = (data) => moment(data).format(dtFormat);
+      break;
+  }
+
+  column.templateString &&
+    (column.render = function (data, type, row, meta) {
+      const tempString = column.templateString;
+      const template = Handlebars.compile(tempString);
+      return template(row);
+    });
+
+  if (column.colorSettings) {
+    column.render = function (data, type, row, meta) {
+      const { numberFormat, success, warning } = column.colorSettings;
+      const dataFormatted =
+        typeof data !== "number"
+          ? data
+          : numeral(data).format(numberFormat || "0,0");
+      const color =
+        typeof data !== "number"
+          ? "light"
+          : data >= success
+          ? "success"
+          : data >= warning
+          ? "warning"
+          : "danger";
+      return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
+    };
+    column.className = "compact";
+  }
+};
+
 // exposing loadData to FileMaker Script
 window.loadData = function (fmData) {
   const fmJson = JSON.parse(fmData); // data from FM is a string
-
   let { data, config, columns } = fmJson;
   const {
     expand,
     script,
     dataPath,
     sortEmptyToBottom = false,
-    dtFormat,
+    dtFormat = "MM/DD/YY",
     globals: globalConfig = {},
   } = config;
 
@@ -94,83 +160,13 @@ window.loadData = function (fmData) {
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
-  const setColumns = (column) => {
-    sortEmptyToBottom
-      ? (column.type = $.fn.dataTable.absoluteOrder({
-          value: "",
-          position: "bottom",
-        }))
-      : (column.type = "");
-
-    if (column.numberFormat)
-      column.render = function (data) {
-        return numeral(data).format(column.numberFormat);
-      };
-
-    column.defaultContent = "";
-
-    switch (column.columnType) {
-      case "percent":
-        column.render = (data) => numeral(data).format("0,0%");
-        break;
-
-      case "number":
-        column.render = (data) => numeral(data).format("0,0");
-        break;
-
-      case "button":
-        column.render = (data) =>
-          "<button class='btn btn-primary middle'>Download</button>";
-        break;
-
-      case "thumbnail":
-        column.render = (data) =>
-          `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
-        column.width = "150px";
-        break;
-
-      case "img":
-        column.render = (data) =>
-          `<img src="${data}" class="img-responsive my-pointer" />`;
-        break;
-
-      case "dateTime":
-        column.render = (data) => moment(data).format(dtFormat || "MM/DD/YY");
-        break;
-    }
-
-    column.templateString &&
-      (column.render = function (data, type, row, meta) {
-        // console.log({ data, type, row, meta });
-        const tempString = column.templateString;
-        const template = Handlebars.compile(tempString);
-        return template(row);
-      });
-
-    if (column.colorSettings) {
-      column.render = function (data, type, row, meta) {
-        const { numberFormat, success, warning } = column.colorSettings;
-        const dataFormatted =
-          typeof data !== "number"
-            ? data
-            : numeral(data).format(numberFormat || "0,0");
-        const color =
-          typeof data !== "number"
-            ? "light"
-            : data >= success
-            ? "success"
-            : data >= warning
-            ? "warning"
-            : "danger";
-        return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
-      };
-      column.className = "compact";
-    }
-  };
-
   // set render methods for columns and expand
-  columns.forEach(setColumns);
-  expand.forEach(setColumns);
+  columns.forEach((column) =>
+    setColumns(column, { dtFormat, sortEmptyToBottom })
+  );
+  expand.forEach((column) =>
+    setColumns(column, { dtFormat, sortEmptyToBottom })
+  );
 
   // add expand column to table and shift the current default sort over
   if (expand) {
@@ -204,9 +200,7 @@ window.loadData = function (fmData) {
     } else {
       // Open this row
       const childHtml = buildExpandTableRowHtml(row.data(), expand);
-      // console.log({ childHtml });
       row.child(childHtml, "expand").show();
-      // console.log(row.child().html());
       $(row.child()).addClass("smallTable"); // row.child(className="expand")
       tr.addClass("shown");
       tdi.first().addClass("fa-caret-down").removeClass("fa-caret-right");
@@ -252,8 +246,6 @@ window.loadData = function (fmData) {
     };
 
     script && FileMaker.PerformScript(script, JSON.stringify(json));
-
-    // // console.log(e.target.closest(".expand").id);
   });
 
   $.fn.dataTable.ext.errMode = "none";
