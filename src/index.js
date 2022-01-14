@@ -164,9 +164,10 @@ window.loadData = function (fmData) {
   columns.forEach((column) =>
     setColumns(column, { dtFormat, sortEmptyToBottom })
   );
-  expand.forEach((column) =>
-    setColumns(column, { dtFormat, sortEmptyToBottom })
-  );
+  expand &&
+    expand.forEach((column) =>
+      setColumns(column, { dtFormat, sortEmptyToBottom })
+    );
 
   // add expand column to table and shift the current default sort over
   if (expand) {
