@@ -226,7 +226,7 @@ window.loadData = function (fmData) {
         location: "row",
         value,
         column: columns[col],
-        row: dataUpdated[row],
+        row: data[row],
       };
       script && FileMaker.PerformScript(script, JSON.stringify(json));
     }
