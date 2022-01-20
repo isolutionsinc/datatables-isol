@@ -54,7 +54,7 @@ const buildExpandTableRowHtml = (rowData, expand) => {
       const rowDataLocation = data.replace("\\", "");
       const renderedData = render
         ? e.render(rowData[rowDataLocation])
-        : rowData[data] || "";
+        : _.get(rowData, data) || "";
 
       return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
     })
@@ -251,3 +251,5 @@ window.loadData = function (fmData) {
 
   $.fn.dataTable.ext.errMode = "none";
 };
+
+// FileMaker.PerformScript("Set Webviewer DATA");
