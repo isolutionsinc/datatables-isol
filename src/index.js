@@ -161,6 +161,32 @@ window.loadData = function (fmData) {
     data = Object.values(data);
   }
 
+  // merge values and make unique if an array of objects is the value provided
+  if (Array.isArray(data[0])) {
+    data = Object.entries(data).map((datum, i) => {
+      return {
+        key: datum[0],
+        ...datum[1].reduce((acc, val) =>
+          _.mergeWith(acc, val, (newValue, srcValue) => {
+            const result = newValue
+              ? [
+                  ...new Set([
+                    ...(Array.isArray(newValue) ? newValue : [newValue]),
+                    ...(Array.isArray(srcValue) ? srcValue : [srcValue]),
+                  ]),
+                ]
+              : srcValue;
+            return Array.isArray(result) && result.length === 1
+              ? result[0]
+              : result;
+          })
+        ),
+      };
+    });
+  }
+
+  console.log(data);
+
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
   // set render methods for columns and expand
