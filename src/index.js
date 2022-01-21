@@ -136,6 +136,9 @@ const setColumns = (column, env) => {
   }
 };
 
+// show loading message
+$("#loading").fadeIn(2000);
+
 // exposing loadData to FileMaker Script
 window.loadData = function (fmData) {
   const fmJson = JSON.parse(fmData); // data from FM is a string
@@ -248,6 +251,8 @@ window.loadData = function (fmData) {
 
     script && FileMaker.PerformScript(script, JSON.stringify(json));
   });
+
+  $("#loading").hide();
 
   $.fn.dataTable.ext.errMode = "none";
 };
