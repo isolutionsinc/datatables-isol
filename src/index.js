@@ -156,14 +156,10 @@ window.loadData = function (fmData) {
   if (dataPath) {
     data = data[dataPath];
   }
-  // convert data into array if it is an object
-  if (!Array.isArray(data)) {
-    data = Object.values(data);
-  }
 
   // merge values and make unique if an array of objects is the value provided
-  if (Array.isArray(data[0])) {
-    data = Object.entries(data).map((datum, i) => {
+  if (Array.isArray(Object.entries(data)[0][1])) {
+    data = Object.entries(data).map((datum) => {
       return {
         key: datum[0],
         ...datum[1].reduce((acc, val) =>
@@ -183,9 +179,10 @@ window.loadData = function (fmData) {
         ),
       };
     });
+    // convert data into array if it is an object
+  } else if (!Array.isArray(data)) {
+    data = Object.values(data);
   }
-
-  console.log(data);
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
 
