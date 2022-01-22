@@ -143,11 +143,30 @@ $("#loading").fadeIn(2000);
 window.sendMessage = function (fmData) {
   const fmJson = JSON.parse(fmData); // data from FM is a string
   $("#message").show().text(fmJson.message);
+  $("#loading").hide();
 };
 
-// exposing loadData to FileMaker Script
-window.loadData = function (fmData) {
+// Ability to load data from a URL
+window.loadUrl = function (fmData) {
   const fmJson = JSON.parse(fmData); // data from FM is a string
+  axios(fmJson.axios)
+    .then(function (response) {
+      // handle success
+      console.log({ response });
+      fmJson.data = response.data.data;
+      loadData(fmJson);
+    })
+    .catch(function (error) {
+      // handle error
+      console.log({ error });
+    })
+    .then(function () {
+      // always executed
+    });
+};
+
+const loadData = (fmData) => {
+  const fmJson = typeof fmData === "string" ? JSON.parse(fmData) : fmData;
   let { data, config, columns } = fmJson;
   const {
     expand,
@@ -304,5 +323,8 @@ window.loadData = function (fmData) {
 
   $.fn.dataTable.ext.errMode = "none";
 };
+
+// exposing loadData to FileMaker Script
+window.loadData = loadData;
 
 FileMaker.PerformScript("Set Webviewer DATA");
