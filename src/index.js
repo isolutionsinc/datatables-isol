@@ -139,6 +139,12 @@ const setColumns = (column, env) => {
 // show loading message
 $("#loading").fadeIn(2000);
 
+// Ability to show alert
+window.sendMessage = function (fmData) {
+  const fmJson = JSON.parse(fmData); // data from FM is a string
+  $("#message").show().text(fmJson.message);
+};
+
 // exposing loadData to FileMaker Script
 window.loadData = function (fmData) {
   const fmJson = JSON.parse(fmData); // data from FM is a string
@@ -152,36 +158,55 @@ window.loadData = function (fmData) {
     globals: globalConfig = {},
   } = config;
 
+  const dataFormat =
+    Array.isArray(data) && data.length == 0
+      ? "empty"
+      : Array.isArray(Object.entries(data)[0][1])
+      ? "objectOfArraysOfObjects"
+      : !Array.isArray(data)
+      ? "notArray"
+      : "array";
+
   // extract data from path if provided
-  if (dataPath) {
-    data = data[dataPath];
+  if (dataPath && dataFormat !== "empty") {
+    data = _.get(data, dataPath);
   }
 
-  // merge values and make unique if an array of objects is the value provided
-  if (Array.isArray(Object.entries(data)[0][1])) {
-    data = Object.entries(data).map((datum) => {
-      return {
-        key: datum[0],
-        ...datum[1].reduce((acc, val) =>
-          _.mergeWith(acc, val, (newValue, srcValue) => {
-            const result = newValue
-              ? [
-                  ...new Set([
-                    ...(Array.isArray(newValue) ? newValue : [newValue]),
-                    ...(Array.isArray(srcValue) ? srcValue : [srcValue]),
-                  ]),
-                ]
-              : srcValue;
-            return Array.isArray(result) && result.length === 1
-              ? result[0]
-              : result;
-          })
-        ),
-      };
-    });
-    // convert data into array if it is an object
-  } else if (!Array.isArray(data)) {
-    data = Object.values(data);
+  switch (dataFormat) {
+    case "array":
+      break;
+    case "notArray":
+      // convert data into array if it is an object
+      data = Object.values(data);
+      break;
+    case "objectOfArraysOfObjects":
+      // merge values and make unique if an array of objects is the value provided
+      console.log({ dataFormat });
+      data = Object.entries(data).map((datum) => {
+        return {
+          key: datum[0],
+          ...datum[1].reduce((acc, val) =>
+            _.mergeWith(acc, val, (newValue, srcValue) => {
+              const result = newValue
+                ? [
+                    ...new Set([
+                      ...(Array.isArray(newValue) ? newValue : [newValue]),
+                      ...(Array.isArray(srcValue) ? srcValue : [srcValue]),
+                    ]),
+                  ]
+                : srcValue;
+              return Array.isArray(result) && result.length === 1
+                ? result[0]
+                : result;
+            })
+          ),
+        };
+      });
+
+      break;
+
+    default:
+      break;
   }
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
@@ -280,4 +305,4 @@ window.loadData = function (fmData) {
   $.fn.dataTable.ext.errMode = "none";
 };
 
-// FileMaker.PerformScript("Set Webviewer DATA");
+FileMaker.PerformScript("Set Webviewer DATA");
