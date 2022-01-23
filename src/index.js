@@ -159,7 +159,11 @@ const loadUrl = function (fmData) {
     .catch(function (error) {
       // handle error
       console.log({ error });
-      sendMessage({ message: error.message });
+      sendMessage({
+        message: fmJson.axios.message
+          ? `${fmJson.axios.message}: ${error.message}`
+          : error.message,
+      });
     })
     .then(function () {
       // always executed
