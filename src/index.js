@@ -140,25 +140,26 @@ const setColumns = (column, env) => {
 $("#loading").fadeIn(2000);
 
 // Ability to show alert
-window.sendMessage = function (fmData) {
-  const fmJson = JSON.parse(fmData); // data from FM is a string
+const sendMessage = function (fmData) {
+  const fmJson = typeof fmData === "string" ? JSON.parse(fmData) : fmData;
   $("#message").show().text(fmJson.message);
   $("#loading").hide();
 };
 
 // Ability to load data from a URL
-window.loadUrl = function (fmData) {
+const loadUrl = function (fmData) {
   const fmJson = JSON.parse(fmData); // data from FM is a string
   axios(fmJson.axios)
     .then(function (response) {
       // handle success
       console.log({ response });
-      fmJson.data = response.data.data;
+      fmJson.data = response.data;
       loadData(fmJson);
     })
     .catch(function (error) {
       // handle error
       console.log({ error });
+      sendMessage({ message: error.message });
     })
     .then(function () {
       // always executed
@@ -326,5 +327,7 @@ const loadData = (fmData) => {
 
 // exposing loadData to FileMaker Script
 window.loadData = loadData;
+window.loadUrl = loadUrl;
+window.sendMessage = sendMessage;
 
 FileMaker.PerformScript("Set Webviewer DATA");
