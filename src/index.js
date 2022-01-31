@@ -1,19 +1,4 @@
-//Here we're importing items we'll need. You can add other imports here.
-// import "./style.css";
-
-const Handlebars = require("handlebars");
-const temp = Handlebars.compile("Name: {{name}}");
-console.log(temp({ name: "Nils" }));
-var table;
-const defaultConfig = {
-  paging: true,
-  lengthChange: true,
-  order: [1, "asc"],
-  searching: true,
-  scrollY: $(window).height() - 150,
-  height: "100%",
-  colReorder: true,
-};
+let table;
 let template;
 
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
@@ -32,170 +17,321 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   },
 });
 
+// add helper functions to Handlebars
+Handlebars.registerHelper("percent", function (data) {
+  return numeral(data).format("0,0%");
+});
+Handlebars.registerHelper("numeral", function (data, format) {
+  return numeral(data).format(format);
+});
+
+const defaultConfig = {
+  paging: true,
+  lengthChange: true,
+  order: [0, "asc"],
+  searching: true,
+  scrollY: $(window).height() - 150,
+  height: "100%",
+  colReorder: true,
+};
+
 const expandColumn = {
   className: "dt-control",
   orderable: false,
   columnType: "arrow",
   data: null,
   defaultContent: "",
-  width: "55px",
+  width: "32px",
   render: function () {
     return '<i class="fa fa-caret-right" aria-hidden="true"></i>';
   },
 };
 
-// exposing loadData to FileMaker Script
-window.loadData = function (json) {
-  var obj = JSON.parse(json); // data from FM is a string
-  var data = obj.data;
-  var config = obj.config;
-  const expand = config.expand;
-  var dtFormat = config.dtFormat ? config.dtFormat : "MM/DD/YYYY";
-  const globalConfig = config.globals || {};
-  var script = config.script;
-  var sortConfig = config.sortEmptyToBottom;
-  const sort = sortConfig === false ? sortConfig : true;
-  var columns = obj.columns;
-  var nameType = $.fn.dataTable.absoluteOrder({
-    value: "",
-    position: "bottom",
-  });
-  let rows = "";
-  function format(d) {
-    const data = d; // `d` is the original data object for the row
-    rows = "";
-    const tableStr = `<table class=" table subTable">`;
-    const tableEnd = `</table>`;
-    expand.forEach((e) => {
-      const tempString = e.templateString || "";
-      const template = Handlebars.compile(tempString);
-      const templateRow = template(d);
-      rows =
-        rows +
-        `<tr><td class="expand" width="20%">${e.title}</td><td class="expand">${
-          e.columnType === "template" ? templateRow : d[e.data] || ""
-        }</td></tr>`;
-      return rows;
-    });
-    return tableStr + rows + tableEnd;
-  }
-  columns.forEach((elm) => {
-    sort ? (elm.type = nameType) : (elm.type = "");
-    elm.columnType === "button"
-      ? (elm.render = function (data, type, row, meta) {
-          return "<button class='btn btn-primary middle'>Download</button>";
-        })
-      : null;
-    elm.columnType === "thumbnail"
-      ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="img-responsive thumbnail my-pointer" />`;
-        })
-      : null;
-    elm.columnType === "img"
-      ? (elm.render = function (data, type, row, meta) {
-          return `<img src="${data}" oneerror='this.oneerror=null' alt='' class="my-pointer img-responsive" />`;
-        })
-      : null;
+const buildExpandTableRowHtml = (rowData, expand) => {
+  const rows = expand
+    .map((e) => {
+      const { title, data, render, className = "" } = e;
+      const rowDataLocation = data.replace("\\", "");
+      const renderedData = render
+        ? e.render(rowData[rowDataLocation])
+        : _.get(rowData, data) || "";
 
-    elm.columnType === "dateTime"
-      ? (elm.render = function (data, type, row, meta) {
-          return moment(data).format(dtFormat);
-        })
-      : null;
-    elm.columnType === "template"
-      ? (elm.render = function (data, type, row, meta) {
-          const tempString = elm.templateString;
-          const template = Handlebars.compile(tempString);
-          return template(row);
-        })
-      : null;
-    return elm;
-  });
-  if (expand) {
-    columns.unshift(expandColumn);
-  }
-  template = columns
-    .map((elm) => elm.data)
-    .reduce((acc, curr) => ((acc[curr] = ""), acc), {});
+      return `<tr><td class="expand title" id="${data}" width="20%">${title}</td><td class="expand data ${className}" id="${data}">${renderedData}</td></tr>`;
+    })
+    .join(" ");
+  return `<table class="table subTable">${rows}</table>`;
+};
 
-  const dataUpdated = data.map((elm) => {
-    return { ...template, ...elm };
-  });
+const setColumns = (column, env) => {
+  const { dtFormat, sortEmptyToBottom } = env;
+  sortEmptyToBottom
+    ? (column.type = $.fn.dataTable.absoluteOrder({
+        value: "",
+        position: "bottom",
+      }))
+    : (column.type = "");
 
-  const ell = (c) => {
-    return function (data, type, row) {
-      return data.length > c ? data.substr(0, c) + "..." : data;
+  if (column.numberFormat)
+    column.render = function (data) {
+      return numeral(data).format(column.numberFormat);
     };
-  };
 
-  const globals = { ...defaultConfig, ...globalConfig };
+  column.defaultContent = "";
 
-  dataUpdated.forEach(function (d) {
-    d.render = d.ellipsis ? ell(d.ellipsis) : undefined;
-  });
-  globals.columns = columns;
-  globals.data = dataUpdated;
+  switch (column.columnType) {
+    case "percent":
+      column.render = (data) => numeral(data).format("0,0%");
+      break;
 
-  // Create the DataTable, after destroying it if already exists
-  if (table) table.destroy();
+    case "number":
+      column.render = (data) => numeral(data).format("0,0");
+      break;
 
-  table = $("#example").DataTable(globals);
+    case "button":
+      column.render = (data) =>
+        "<button class='btn btn-primary middle'>Download</button>";
+      break;
 
-  // Add the click handler to the row, after removing it if already exists
-  if (script) {
-    $("#example tbody").off("click");
-    $("#example tbody").on("click", "td.dt-control", function (e) {
-      var data = table.row(this).data();
-      console.log("data", data);
-      var tr = $(this).closest("tr");
-      var tdi = tr.find("i.fa");
-      var row = table.row(tr);
-      if (row.child.isShown()) {
-        // This row is already open - close it
-        row.child.hide();
-        tr.removeClass("shown");
-        tdi.first().removeClass("fa-caret-down");
-        tdi.first().addClass("fa-caret-right");
-      } else {
-        // Open this row
-        row.child(format(row.data()), "expand").show();
-        $(row.child()).addClass("smallTable"); // row.child(className="expand")
-        tr.addClass("shown");
-        tdi.first().removeClass("fa-caret-right");
-        tdi.first().addClass("fa-caret-down");
-      }
-      e.stopPropagation();
+    case "thumbnail":
+      column.render = (data) =>
+        `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
+      column.width = "150px";
+      break;
+
+    case "img":
+      column.render = (data) =>
+        `<img src="${data}" class="img-responsive my-pointer" />`;
+      break;
+
+    case "dateTime":
+      column.render = (data) => moment(data).format(dtFormat);
+      break;
+  }
+
+  column.templateString &&
+    (column.render = function (data, type, row, meta) {
+      const tempString = column.templateString;
+      const template = Handlebars.compile(tempString);
+      return template(row);
     });
 
-    table.on("user-select", function (e, dt, type, cell, originalEvent) {
-      if ($(cell.node()).hasClass("dt-control")) {
-      }
-    });
+  if (column.colorSettings) {
+    column.render = function (data, type, row, meta) {
+      const { numberFormat, success, warning } = column.colorSettings;
+      const dataFormatted =
+        typeof data !== "number"
+          ? data
+          : numeral(data).format(numberFormat || "0,0");
+      const color =
+        typeof data !== "number"
+          ? "light"
+          : data >= success
+          ? "success"
+          : data >= warning
+          ? "warning"
+          : "danger";
+      return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
+    };
+    column.className = "compact";
+  }
+};
 
-    $("#example tbody").on(
-      "click",
-      "td:not(.dt-control):not(.expand)",
-      function () {
-        var cell = table.cell(this);
-        const cellObj = cell[0][0];
-        const value = cell.data();
-        const col = table.column(this).index();
-        const row = table.row(this).index();
-        const json = { value, column: columns[col], row: dataUpdated[row] };
-        console.log(json);
-        FileMaker.PerformScript(script, JSON.stringify(json));
-      }
+// show loading message
+$("#loading").fadeIn(2000);
+
+// Ability to show alert
+const sendMessage = function (fmData) {
+  const fmJson = typeof fmData === "string" ? JSON.parse(fmData) : fmData;
+  $("#message").show().text(fmJson.message);
+  $("#loading").hide();
+};
+
+// Ability to load data from a URL
+const loadUrl = function (fmData) {
+  const fmJson = JSON.parse(fmData); // data from FM is a string
+  axios(fmJson.axios)
+    .then(function (response) {
+      // handle success
+      console.log({ response });
+      fmJson.data = response.data;
+      loadData(fmJson);
+    })
+    .catch(function (error) {
+      // handle error
+      console.log({ error });
+      sendMessage({
+        message: fmJson.axios.message
+          ? `${fmJson.axios.message}: ${error.message}`
+          : error.message,
+      });
+    })
+    .then(function () {
+      // always executed
+    });
+};
+
+const loadData = (fmData) => {
+  const fmJson = typeof fmData === "string" ? JSON.parse(fmData) : fmData;
+  let { data, config, columns } = fmJson;
+  const {
+    expand,
+    script,
+    dataPath,
+    sortEmptyToBottom = false,
+    dtFormat = "MM/DD/YY",
+    globals: globalConfig = {},
+  } = config;
+
+  const dataFormat =
+    Array.isArray(data) && data.length == 0
+      ? "empty"
+      : Array.isArray(Object.entries(data)[0][1])
+      ? "objectOfArraysOfObjects"
+      : !Array.isArray(data)
+      ? "notArray"
+      : "array";
+
+  // extract data from path if provided
+  if (dataPath && dataFormat !== "empty") {
+    data = _.get(data, dataPath);
+  }
+
+  switch (dataFormat) {
+    case "array":
+      break;
+    case "notArray":
+      // convert data into array if it is an object
+      data = Object.values(data);
+      break;
+    case "objectOfArraysOfObjects":
+      // merge values and make unique if an array of objects is the value provided
+      console.log({ dataFormat });
+      data = Object.entries(data).map((datum) => {
+        return {
+          key: datum[0],
+          ...datum[1].reduce((acc, val) =>
+            _.mergeWith(acc, val, (newValue, srcValue) => {
+              const result = newValue
+                ? [
+                    ...new Set([
+                      ...(Array.isArray(newValue) ? newValue : [newValue]),
+                      ...(Array.isArray(srcValue) ? srcValue : [srcValue]),
+                    ]),
+                  ]
+                : srcValue;
+              return Array.isArray(result) && result.length === 1
+                ? result[0]
+                : result;
+            })
+          ),
+        };
+      });
+
+      break;
+
+    default:
+      break;
+  }
+
+  const dtPayload = { ...defaultConfig, ...globalConfig };
+
+  // set render methods for columns and expand
+  columns.forEach((column) =>
+    setColumns(column, { dtFormat, sortEmptyToBottom })
+  );
+  expand &&
+    expand.forEach((column) =>
+      setColumns(column, { dtFormat, sortEmptyToBottom })
     );
 
-    $("#example tbody td").on("click", "expand", function () {
-      // alert(d);
-      const json = { value, column: columns[col], row: dataUpdated[row] };
-      console.log(json);
-      FileMaker.PerformScript(script, JSON.stringify(json));
-    });
-    // Add event listener for opening and closing details
-
-    // $('#example tbody').on('click', 'td.dt-control', function (e) {e.preventDefault();});
+  // add expand column to table and shift the current default sort over
+  if (expand) {
+    columns = [expandColumn, ...columns];
+    dtPayload.order[0]++;
   }
+
+  dtPayload.columns = columns;
+  dtPayload.data = data;
+
+  // Create the DataTable, after destroying it if already exists
+  table && table.destroy();
+  try {
+    table = $("#example").DataTable(dtPayload);
+  } catch (error) {
+    console.log({ error });
+  }
+
+  // Add the click handler to the row, after removing it if already exists
+  $("#example tbody").off("click");
+  $("#example tbody").on("click", "td.dt-control", function (e) {
+    var tr = $(this).closest("tr");
+    var tdi = tr.find("i.fa");
+    var row = table.row(tr);
+
+    if (row.child.isShown()) {
+      // This row is already open - close it
+      row.child.hide();
+      tr.removeClass("shown");
+      tdi.first().addClass("fa-caret-right").removeClass("fa-caret-down");
+    } else {
+      // Open this row
+      const childHtml = buildExpandTableRowHtml(row.data(), expand);
+      row.child(childHtml, "expand").show();
+      $(row.child()).addClass("smallTable"); // row.child(className="expand")
+      tr.addClass("shown");
+      tdi.first().addClass("fa-caret-down").removeClass("fa-caret-right");
+    }
+    e.stopPropagation();
+  });
+
+  // hide result count when paging is off
+  dtPayload.paging === false && $("#example_info").remove();
+
+  // add click event for rows
+  $("#example tbody").on(
+    "click",
+    "td:not(.dt-control):not(.expand)",
+    function () {
+      var cell = table.cell(this);
+      const cellObj = cell[0][0];
+      const value = cell.data();
+      const col = table.column(this).index();
+      const row = table.row(this).index();
+      const json = {
+        location: "row",
+        value,
+        column: columns[col],
+        row: data[row],
+      };
+      script && FileMaker.PerformScript(script, JSON.stringify(json));
+    }
+  );
+  // add click event for expand sections
+  $("#example tbody").on("click", ".data, .title", function (e) {
+    const row = table
+      .row(this.closest(".smallTable").previousElementSibling)
+      .data();
+    const json = {
+      location: "expand",
+      row,
+      value: row[e.target.id],
+      expand: {
+        id: e.target.closest(".expand").id,
+        classList: e.target.classList,
+      },
+    };
+
+    script && FileMaker.PerformScript(script, JSON.stringify(json));
+  });
+
+  $("#loading").hide();
+
   $.fn.dataTable.ext.errMode = "none";
 };
+
+// exposing loadData to FileMaker Script
+window.loadData = loadData;
+window.loadUrl = loadUrl;
+window.sendMessage = sendMessage;
+
+FileMaker.PerformScript("Set Webviewer DATA");
