@@ -132,3 +132,6 @@ table.dataTable thead th.sorting_desc:after {
   content: "\f0dd" !important;
   opacity: 1;
 }
+.dataTables_scrollHeadInner {
+  background-color: #e4e6e4;
+}

@@ -94,13 +94,13 @@ const setColumns = (column, env) => {
 
     case "thumbnail":
       column.render = (data) =>
-        `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" />`;
+        `<img src="${data}" style="height: 100px max-width: 100px" class="img-responsive my-pointer" onerror="this.style.display='none'" />`;
       column.width = "150px";
       break;
 
     case "img":
       column.render = (data) =>
-        `<img src="${data}" class="img-responsive my-pointer" />`;
+        `<img src="${data}" class="img-responsive my-pointer" onerror="this.style.display='none'" />`;
       break;
 
     case "dateTime":
@@ -174,6 +174,7 @@ const loadData = (fmData) => {
   const fmJson = typeof fmData === "string" ? JSON.parse(fmData) : fmData;
   let { data, config, columns } = fmJson;
   const {
+    filterBy,
     expand,
     script,
     dataPath,
@@ -231,6 +232,10 @@ const loadData = (fmData) => {
 
     default:
       break;
+  }
+
+  if (filterBy) {
+    data = data.filter((row) => filterBy.values.includes(row[filterBy.column]));
   }
 
   const dtPayload = { ...defaultConfig, ...globalConfig };
@@ -327,6 +332,8 @@ const loadData = (fmData) => {
   $("#loading").hide();
 
   $.fn.dataTable.ext.errMode = "none";
+
+  table.columns.adjust().draw();
 };
 
 // exposing loadData to FileMaker Script
