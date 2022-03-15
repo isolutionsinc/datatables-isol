@@ -27,7 +27,7 @@ export const createDivs = (columns, table) => {
     inputField.classList.add("form-control");
     inputField.classList.add("pl-3");
     inputField.id = `${column.data}Search`;
-    inputField.type = "text";
+    inputField.type = "search";
     inputField.addEventListener("keyup", function () {
       console.log(this.value);
       table.columns(i).search(this.value).draw();
