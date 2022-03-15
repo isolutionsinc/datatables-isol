@@ -1,6 +1,6 @@
 let table;
 let template;
-
+import { createDivs } from "./utils-create-search";
 jQuery.extend(jQuery.fn.dataTableExt.oSort, {
   "non-empty-string-desc": function (str1, str2) {
     if (str1 == "" && str2 != "") return 1;
@@ -32,7 +32,36 @@ const defaultConfig = {
   searching: true,
   scrollY: $(window).height() - 150,
   height: "100%",
-  colReorder: true,
+  colReorder: false,
+  // initComplete: function () {
+  //   this.api()
+  //     .columns()
+  //     .every(function () {
+  //       var column = this;
+  //       console.log("COL", column);
+  //       const typeCol = typeof column.data()[0];
+  //       console.log(typeCol);
+  //       // alert("Column type is not object");
+  //       if (typeCol !== "object") {
+  //         console.log("Column type is not object");
+  //         var select = $('<select><option value=""></option></select>')
+  //           .appendTo($(column.header()).append())
+  //           .on("change", function () {
+  //             var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+  //             column.search(val ? "^" + val + "$" : "", true, false).draw();
+  //           });
+
+  //         column
+  //           .data()
+  //           .unique()
+  //           .sort()
+  //           .each(function (d, j) {
+  //             select.append('<option value="' + d + '">' + d + "</option>");
+  //           });
+  //       }
+  //     });
+  // },
 };
 
 const expandColumn = {
@@ -252,7 +281,7 @@ const loadData = (fmData) => {
 
   dtPayload.columns = columns;
   dtPayload.data = data;
-
+  console.log(columns);
   // Create the DataTable, after destroying it if already exists
   table && table.destroy();
   try {
@@ -325,7 +354,11 @@ const loadData = (fmData) => {
   });
 
   $("#loading").hide();
-
+  if (config.showIndColSearch) {
+    createDivs(columns, table);
+    document.getElementById("searchText").innerHTML =
+      "Search Individual Columns";
+  }
   $.fn.dataTable.ext.errMode = "none";
 };
 
@@ -333,5 +366,4 @@ const loadData = (fmData) => {
 window.loadData = loadData;
 window.loadUrl = loadUrl;
 window.sendMessage = sendMessage;
-
-FileMaker.PerformScript("Set Webviewer DATA");
+// FileMaker.PerformScript("Set Webviewer DATA");
