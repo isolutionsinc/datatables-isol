@@ -30,7 +30,7 @@ const defaultConfig = {
   lengthChange: true,
   order: [0, "asc"],
   searching: true,
-  scrollY: $(window).height() - 150,
+  scrollY: document.documentElement.clientHeight - 94,
   height: "100%",
   colReorder: true,
 };
@@ -136,9 +136,6 @@ const setColumns = (column, env) => {
   }
 };
 
-// show loading message
-$("#loading").fadeIn(2000);
-
 // Ability to show alert
 const sendMessage = function (fmData) {
   const fmJson = typeof fmData === "string" ? JSON.parse(fmData) : fmData;
@@ -152,13 +149,11 @@ const loadUrl = function (fmData) {
   axios(fmJson.axios)
     .then(function (response) {
       // handle success
-      console.log({ response });
       fmJson.data = response.data;
       loadData(fmJson);
     })
     .catch(function (error) {
       // handle error
-      console.log({ error });
       sendMessage({
         message: fmJson.axios.message
           ? `${fmJson.axios.message}: ${error.message}`
@@ -178,6 +173,7 @@ const loadData = (fmData) => {
     expand,
     script,
     dataPath,
+    dataType,
     sortEmptyToBottom = false,
     dtFormat = "MM/DD/YY",
     globals: globalConfig = {},
@@ -186,6 +182,8 @@ const loadData = (fmData) => {
   const dataFormat =
     Array.isArray(data) && data.length == 0
       ? "empty"
+      : typeof data[0] === "string"
+      ? "simpleArray"
       : Array.isArray(Object.entries(data)[0][1])
       ? "objectOfArraysOfObjects"
       : !Array.isArray(data)
@@ -204,9 +202,13 @@ const loadData = (fmData) => {
       // convert data into array if it is an object
       data = Object.values(data);
       break;
+    case "simpleArray":
+      data = data.map((value) => {
+        return { value };
+      });
+      break;
     case "objectOfArraysOfObjects":
       // merge values and make unique if an array of objects is the value provided
-      console.log({ dataFormat });
       data = Object.entries(data).map((datum) => {
         return {
           key: datum[0],
@@ -257,14 +259,13 @@ const loadData = (fmData) => {
 
   dtPayload.columns = columns;
   dtPayload.data = data;
+  dtPayload.oLanguage = { sSearch: "Filter:" };
 
   // Create the DataTable, after destroying it if already exists
   table && table.destroy();
   try {
     table = $("#example").DataTable(dtPayload);
-  } catch (error) {
-    console.log({ error });
-  }
+  } catch (error) {}
 
   // Add the click handler to the row, after removing it if already exists
   $("#example tbody").off("click");
@@ -333,6 +334,14 @@ const loadData = (fmData) => {
 
   $.fn.dataTable.ext.errMode = "none";
 
+  const dtHeadHeight =
+    $(".dataTables_filter").outerHeight() +
+    $(".dataTables_scrollHead").outerHeight() +
+    5;
+  const dtHeight = `${window.innerHeight - dtHeadHeight}px`;
+
+  $(".dataTables_scrollBody").css("max-height", dtHeight);
+
   table.columns.adjust().draw();
 };
 
@@ -341,4 +350,20 @@ window.loadData = loadData;
 window.loadUrl = loadUrl;
 window.sendMessage = sendMessage;
 
-FileMaker.PerformScript("Set Webviewer DATA");
+// const scriptName = "Exit Script"
+const scriptName = "Set Webviewer DATA";
+
+try {
+  FileMaker.PerformScriptWithOption(scriptName, "", 3);
+  console.log("Found FileMaker Webviewer");
+  // show loading message
+  $("#loading").fadeIn(2000).fadeOut(5000);
+} catch (error) {
+  console.log("FileMaker Webviewer NOT Found trying again...");
+  console.log({ error });
+  setTimeout(() => {
+    FileMaker.PerformScriptWithOption(scriptName, "", 3);
+    // show loading message
+    $("#loading").fadeIn(2000).fadeOut(5000);
+  }, 400);
+}
