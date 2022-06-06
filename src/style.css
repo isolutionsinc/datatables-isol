@@ -88,6 +88,13 @@ table.dataTable tbody td {
   cursor: pointer;
 }
 
+.highlight {
+  background-color: #ffefcb;
+}
+.highlight-green {
+  background-color: #d8e9ca;
+}
+
 /* dataTables CSS modification & positioning */
 table.dataTable thead .sorting:before,
 table.dataTable thead .sorting_asc:before,

@@ -106,6 +106,13 @@ const setColumns = (column, env) => {
     case "dateTime":
       column.render = (data) => moment(data).format(dtFormat);
       break;
+
+    case "daysSince":
+      column.render = (data) =>
+        Math.floor(
+          moment.duration(moment(new Date()).diff(moment(data))).asDays()
+        );
+      break;
   }
 
   column.templateString &&
@@ -114,6 +121,12 @@ const setColumns = (column, env) => {
       const template = Handlebars.compile(tempString);
       return template(row);
     });
+
+  // if (column.highlightColumn) {
+  //   column.render = function (data, type, row, meta) {
+  //     return `<div class="highlight rounded-0 m-0">${data}</div>`;
+  //   };
+  // }
 
   if (column.colorSettings) {
     column.render = function (data, type, row, meta) {
@@ -130,9 +143,9 @@ const setColumns = (column, env) => {
           : data >= warning
           ? "warning"
           : "danger";
+
       return `<div class="alert alert-${color} rounded-0 text-dark m-0">${dataFormatted}</div>`;
     };
-    column.className = "compact";
   }
 };
 
@@ -257,6 +270,16 @@ const loadData = (fmData) => {
     dtPayload.order[0]++;
   }
 
+  dtPayload.rowCallback = (row, data, index) => {
+    const highlight = data.bool_highlight;
+    if (highlight == 1) {
+      $(row).addClass("highlight");
+    }
+    const highlight_green = data.bool_highlight_submitted;
+    if (highlight_green == 1) {
+      $(row).addClass("highlight-green");
+    }
+  };
   dtPayload.columns = columns;
   dtPayload.data = data;
   dtPayload.oLanguage = { sSearch: "Filter:" };
@@ -303,7 +326,9 @@ const loadData = (fmData) => {
       const value = cell.data();
       const col = table.column(this).index();
       const row = table.row(this).index();
+      global.lastRow = $(this).closest("tr");
       const json = {
+        index: row,
         location: "row",
         value,
         column: columns[col],
@@ -314,10 +339,15 @@ const loadData = (fmData) => {
   );
   // add click event for expand sections
   $("#example tbody").on("click", ".data, .title", function (e) {
+    global.lastRow = $(this).closest("tr.expand").prev();
     const row = table
       .row(this.closest(".smallTable").previousElementSibling)
       .data();
+    const index = table
+      .row(this.closest(".smallTable").previousElementSibling)
+      .index();
     const json = {
+      index: index,
       location: "expand",
       row,
       value: row[e.target.id],
@@ -331,7 +361,9 @@ const loadData = (fmData) => {
   });
 
   $("#loading").hide();
-
+  document.querySelector(
+    "#example > tbody > tr.odd.shown > td:nth-child(5) > i"
+  );
   $.fn.dataTable.ext.errMode = "none";
 
   const dtHeadHeight =
@@ -345,7 +377,37 @@ const loadData = (fmData) => {
   table.columns.adjust().draw();
 };
 
+// SELECT BUTTON
+
+const highlightRowAdd = (columnNumber) => {
+  $($(lastRow.children()[columnNumber]).children()[0])
+    .removeClass("fa-square-o")
+    .addClass("fa-check-square-o");
+  $(lastRow).addClass("highlight");
+};
+
+const highlightRowRemove = (columnNumber) => {
+  $($(lastRow.children()[columnNumber]).children()[0])
+    .removeClass("fa-check-square-o")
+    .addClass("fa-square-o");
+  $(lastRow).removeClass("highlight");
+};
+
+// SELECT BUTTON
+
+const removeLastRow = () => {
+  const LastRowSelected = $(lastRow);
+  const LastRowSelectedNext = LastRowSelected.next();
+  const isExpanded = LastRowSelectedNext.hasClass("expand");
+
+  LastRowSelected.hide();
+  if (isExpanded) LastRowSelectedNext.hide();
+};
+
 // exposing loadData to FileMaker Script
+window.removeLastRow = removeLastRow;
+window.highlightRowAdd = highlightRowAdd;
+window.highlightRowRemove = highlightRowRemove;
 window.loadData = loadData;
 window.loadUrl = loadUrl;
 window.sendMessage = sendMessage;
@@ -355,12 +417,9 @@ const scriptName = "Set Webviewer DATA";
 
 try {
   FileMaker.PerformScriptWithOption(scriptName, "", 3);
-  console.log("Found FileMaker Webviewer");
   // show loading message
   $("#loading").fadeIn(2000).fadeOut(5000);
 } catch (error) {
-  console.log("FileMaker Webviewer NOT Found trying again...");
-  console.log({ error });
   setTimeout(() => {
     FileMaker.PerformScriptWithOption(scriptName, "", 3);
     // show loading message
