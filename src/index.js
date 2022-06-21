@@ -25,6 +25,10 @@ Handlebars.registerHelper("numeral", function (data, format) {
   return numeral(data).format(format);
 });
 
+Handlebars.registerHelper("ifEquals", function (arg1, arg2, options) {
+  return arg1 == arg2 ? options.fn(this) : options.inverse(this);
+});
+
 const defaultConfig = {
   paging: true,
   lengthChange: true,
@@ -395,6 +399,22 @@ const highlightRowRemove = (columnNumber) => {
 
 // SELECT BUTTON
 
+// FAVORITES BUTTON
+
+const favoriteRowAdd = (columnNumber) => {
+  $($(lastRow.children()[columnNumber]).children()[0])
+    .removeClass("fa-bookmark-o")
+    .addClass("fa-bookmark");
+};
+
+const favoriteRowRemove = (columnNumber) => {
+  $($(lastRow.children()[columnNumber]).children()[0])
+    .removeClass("fa-bookmark")
+    .addClass("fa-bookmark-o");
+};
+
+// FAVORITES BUTTON
+
 const removeLastRow = () => {
   const LastRowSelected = $(lastRow);
   const LastRowSelectedNext = LastRowSelected.next();
@@ -405,6 +425,8 @@ const removeLastRow = () => {
 };
 
 // exposing loadData to FileMaker Script
+window.favoriteRowAdd = favoriteRowAdd;
+window.favoriteRowRemove = favoriteRowRemove;
 window.removeLastRow = removeLastRow;
 window.highlightRowAdd = highlightRowAdd;
 window.highlightRowRemove = highlightRowRemove;
