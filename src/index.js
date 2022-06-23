@@ -21,8 +21,13 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort, {
 Handlebars.registerHelper("percent", function (data) {
   return numeral(data).format("0,0%");
 });
+
 Handlebars.registerHelper("numeral", function (data, format) {
   return numeral(data).format(format);
+});
+
+Handlebars.registerHelper("lastValueOfPath", function (data, separator) {
+  return data.split(separator).pop();
 });
 
 Handlebars.registerHelper("ifEquals", function (arg1, arg2, options) {
@@ -116,6 +121,10 @@ const setColumns = (column, env) => {
         Math.floor(
           moment.duration(moment(new Date()).diff(moment(data))).asDays()
         );
+      break;
+
+    case "timeSince":
+      column.render = (data) => moment(moment(data)).fromNow();
       break;
   }
 
