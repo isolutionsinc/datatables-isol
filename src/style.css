@@ -95,6 +95,10 @@ table.dataTable tbody td {
   background-color: #d8e9ca;
 }
 
+td.no-highlight {
+  background-color: white;
+}
+
 /* dataTables CSS modification & positioning */
 table.dataTable thead .sorting:before,
 table.dataTable thead .sorting_asc:before,
