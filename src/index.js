@@ -71,6 +71,17 @@ const buildExpandTableRowHtml = (rowData, expand) => {
   return `<table class="table subTable">${rows}</table>`;
 };
 
+const objectToArray = ({ funcData, filter }) => {
+  filter = typeof filter === "string" ? JSON.parse(filter) : filter;
+  const entries = Object.entries(funcData);
+  const filteredEntries = entries.filter((v) => filter[v[0]]);
+  return filteredEntries.map((v) => ({
+    key: v[0],
+    value: v[1],
+    title: filter[v[0]],
+  }));
+};
+
 const setColumns = (column, env) => {
   const { dtFormat, sortEmptyToBottom } = env;
   sortEmptyToBottom
@@ -199,22 +210,25 @@ const loadData = (fmData) => {
     expand,
     script,
     dataPath,
+    propFilter,
     dataType,
     sortEmptyToBottom = false,
     dtFormat = "MM/DD/YY",
     globals: globalConfig = {},
   } = config;
+  console.log("DEBUG");
 
-  const dataFormat =
-    Array.isArray(data) && data.length == 0
-      ? "empty"
-      : typeof data[0] === "string"
-      ? "simpleArray"
-      : Array.isArray(Object.entries(data)[0][1])
-      ? "objectOfArraysOfObjects"
-      : !Array.isArray(data)
-      ? "notArray"
-      : "array";
+  const dataFormat = dataType
+    ? dataType
+    : Array.isArray(data) && data.length == 0
+    ? "empty"
+    : typeof data[0] === "string"
+    ? "simpleArray"
+    : Array.isArray(Object.entries(data)[0][1])
+    ? "objectOfArraysOfObjects"
+    : !Array.isArray(data)
+    ? "notArray"
+    : "array";
 
   // extract data from path if provided
   if (dataPath && dataFormat !== "empty") {
@@ -222,6 +236,9 @@ const loadData = (fmData) => {
   }
 
   switch (dataFormat) {
+    case "singleObject":
+      data = objectToArray({ funcData: data, filter: propFilter });
+      break;
     case "array":
       break;
     case "notArray":
