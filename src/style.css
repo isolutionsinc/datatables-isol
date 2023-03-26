@@ -94,6 +94,18 @@ table.dataTable tbody td {
 .highlight-green {
   background-color: #d8e9ca;
 }
+.highlight-draft {
+  background-color: #ffefca;
+}
+.highlight-confirmed {
+  background-color: #d8e9ca;
+}
+.highlight-submitted {
+  background-color: #dae4fd;
+}
+.bool-gray {
+  color: #adadad;
+}
 
 td.no-highlight {
   background-color: white;

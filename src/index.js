@@ -309,6 +309,18 @@ const loadData = (fmData) => {
     if (highlight_green == 1) {
       $(row).addClass("highlight-green");
     }
+    if (data.status == "draft") {
+      $(row).addClass("highlight-draft");
+    }
+    if (data.status == "confirmed") {
+      $(row).addClass("highlight-confirmed");
+    }
+    if (data.status == "submitted") {
+      $(row).addClass("highlight-submitted");
+    }
+    if (data.bool_gray) {
+      $(row).addClass("bool-gray");
+    }
   };
   dtPayload.columns = columns;
   dtPayload.data = data;
@@ -403,8 +415,8 @@ const loadData = (fmData) => {
   const dtHeight = `${window.innerHeight - dtHeadHeight}px`;
 
   $(".dataTables_scrollBody").css("max-height", dtHeight);
-
   table.columns.adjust().draw();
+  setTimeout(() => table.columns.adjust().draw(), 1000);
 };
 
 // SELECT BUTTON
@@ -459,6 +471,7 @@ window.highlightRowRemove = highlightRowRemove;
 window.loadData = loadData;
 window.loadUrl = loadUrl;
 window.sendMessage = sendMessage;
+window.draw = () => table.columns.adjust().draw();
 
 // const scriptName = "Exit Script"
 const scriptName = "Set Webviewer DATA";
